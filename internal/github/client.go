@@ -1,5 +1,5 @@
-// Package github ist der GitHub-spezifische Forge-Adapter:
-// es implementiert catalog.FileReader und kapselt die PR-Erstellung.
+// Package github is the GitHub-specific forge adapter: it implements
+// catalog.FileReader and encapsulates Pull Request creation.
 package github
 
 import (
@@ -14,17 +14,17 @@ import (
 	"github.com/stuttgart-things/machinery-catalog-locator/internal/config"
 )
 
-// TokenSource liefert ein gueltiges Git-Auth-Token (z. B. fuer git push).
+// TokenSource yields a valid Git auth token (e.g. for git push).
 type TokenSource func(ctx context.Context) (string, error)
 
-// NewClient baut einen authentifizierten GitHub-Client.
-// Bevorzugt wird die GitHub App; faellt sonst auf ein PAT zurueck.
-// Zusaetzlich wird eine TokenSource fuer go-git-Operationen zurueckgegeben.
+// NewClient builds an authenticated GitHub client. The GitHub App is
+// preferred; otherwise it falls back to a Personal Access Token. A
+// TokenSource is returned alongside for go-git push operations.
 func NewClient(cfg config.GitHubConfig) (*gh.Client, TokenSource, error) {
 	if cfg.UsesApp() {
 		key, err := os.ReadFile(cfg.PrivateKeyPath)
 		if err != nil {
-			return nil, nil, fmt.Errorf("private key lesen: %w", err)
+			return nil, nil, fmt.Errorf("read private key: %w", err)
 		}
 		itr, err := ghinstallation.New(http.DefaultTransport, cfg.AppID, cfg.InstallationID, key)
 		if err != nil {
@@ -34,7 +34,6 @@ func NewClient(cfg config.GitHubConfig) (*gh.Client, TokenSource, error) {
 		return client, itr.Token, nil
 	}
 
-	// Dev-Fallback: Personal Access Token
 	client := gh.NewClient(nil).WithAuthToken(cfg.Token)
 	token := cfg.Token
 	return client, func(context.Context) (string, error) { return token, nil }, nil

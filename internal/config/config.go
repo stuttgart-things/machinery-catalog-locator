@@ -1,4 +1,4 @@
-// Package config laedt die Laufzeitkonfiguration aus Environment-Variablen.
+// Package config loads runtime configuration from environment variables.
 package config
 
 import (
@@ -7,15 +7,16 @@ import (
 	"strconv"
 )
 
-// Config buendelt alle Laufzeitparameter.
+// Config bundles all runtime parameters.
 type Config struct {
-	ListenAddr string
-	GitHub     GitHubConfig
-	Git        GitIdentity
+	GRPCPort int
+	HTTPPort int
+	GitHub   GitHubConfig
+	Git      GitIdentity
 }
 
-// GitHubConfig haelt die Authentifizierungsdaten fuer GitHub.
-// Entweder werden App-Credentials genutzt oder - als Dev-Fallback - ein Token.
+// GitHubConfig carries authentication for GitHub. Either App credentials
+// are used or a Personal Access Token as a dev fallback.
 type GitHubConfig struct {
 	AppID          int64
 	InstallationID int64
@@ -23,48 +24,49 @@ type GitHubConfig struct {
 	Token          string
 }
 
-// UsesApp meldet, ob eine GitHub App konfiguriert ist.
+// UsesApp reports whether GitHub App credentials are configured.
 func (g GitHubConfig) UsesApp() bool {
 	return g.AppID != 0 && g.InstallationID != 0 && g.PrivateKeyPath != ""
 }
 
-// GitIdentity ist die Commit-Identitaet des Bots.
+// GitIdentity is the commit identity used by the bot.
 type GitIdentity struct {
 	Name  string
 	Email string
 }
 
-// Load liest die Konfiguration aus dem Environment und validiert sie.
+// Load reads configuration from the environment and validates it.
 func Load() (Config, error) {
 	c := Config{
-		ListenAddr: envDefault("LISTEN_ADDR", ":8080"),
+		GRPCPort: envInt("GRPC_PORT", 50051),
+		HTTPPort: envInt("HTTP_PORT", 8080),
 		GitHub: GitHubConfig{
 			PrivateKeyPath: os.Getenv("GITHUB_PRIVATE_KEY_PATH"),
 			Token:          os.Getenv("GITHUB_TOKEN"),
 		},
 		Git: GitIdentity{
-			Name:  envDefault("GIT_AUTHOR_NAME", "catalog-locator"),
-			Email: envDefault("GIT_AUTHOR_EMAIL", "catalog-locator@local"),
+			Name:  envDefault("GIT_AUTHOR_NAME", "machinery-catalog-locator"),
+			Email: envDefault("GIT_AUTHOR_EMAIL", "machinery-catalog-locator@local"),
 		},
 	}
 
 	if v := os.Getenv("GITHUB_APP_ID"); v != "" {
 		id, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
-			return Config{}, fmt.Errorf("GITHUB_APP_ID ungueltig: %w", err)
+			return Config{}, fmt.Errorf("GITHUB_APP_ID invalid: %w", err)
 		}
 		c.GitHub.AppID = id
 	}
 	if v := os.Getenv("GITHUB_INSTALLATION_ID"); v != "" {
 		id, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
-			return Config{}, fmt.Errorf("GITHUB_INSTALLATION_ID ungueltig: %w", err)
+			return Config{}, fmt.Errorf("GITHUB_INSTALLATION_ID invalid: %w", err)
 		}
 		c.GitHub.InstallationID = id
 	}
 
 	if !c.GitHub.UsesApp() && c.GitHub.Token == "" {
-		return Config{}, fmt.Errorf("keine GitHub-Credentials: entweder GITHUB_APP_ID/INSTALLATION_ID/PRIVATE_KEY_PATH oder GITHUB_TOKEN setzen")
+		return Config{}, fmt.Errorf("no GitHub credentials: set GITHUB_APP_ID/INSTALLATION_ID/PRIVATE_KEY_PATH or GITHUB_TOKEN")
 	}
 	return c, nil
 }
@@ -74,4 +76,16 @@ func envDefault(key, def string) string {
 		return v
 	}
 	return def
+}
+
+func envInt(key string, def int) int {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n <= 0 {
+		return def
+	}
+	return n
 }

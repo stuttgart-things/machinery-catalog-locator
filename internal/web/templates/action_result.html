@@ -1,0 +1,11 @@
+{{if .OK}}
+<div class="alert alert-ok">
+    <strong>{{.Title}}</strong> &mdash;
+    <a href="{{.PullRequest}}" target="_blank">{{.PullRequest}}</a>
+</div>
+{{else}}
+<div class="alert alert-error">
+    <strong>{{.Title}}</strong>
+    <div>{{.ErrorMessage}}</div>
+</div>
+{{end}}

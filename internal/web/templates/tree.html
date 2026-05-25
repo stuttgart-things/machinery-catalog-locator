@@ -1,0 +1,107 @@
+{{define "node"}}
+<li class="node">
+    <div class="node-line">
+        {{if eq .Entity.Kind "Location"}}
+            <span class="badge badge-location">Location</span>
+        {{else}}
+            <span class="badge badge-kind">{{.Entity.Kind}}</span>
+        {{end}}
+        <span class="name">{{.Entity.Metadata.Name}}</span>
+        {{if .Entity.Metadata.Namespace}}
+            <span class="badge badge-namespace">{{.Entity.Metadata.Namespace}}</span>
+        {{end}}
+        <span class="badge badge-source">{{.Source.Owner}}/{{.Source.Repo}}@{{.Source.Ref}}:{{.Source.Path}}</span>
+        {{if .ViaTarget}}
+            <span class="badge badge-target">via {{.ViaTarget}}</span>
+        {{end}}
+        <div class="actions">
+            {{if eq .Entity.Kind "Location"}}
+                {{$loc := .}}
+                {{range .Entity.Targets}}
+                <form hx-post="/remove-target"
+                      hx-target="#action-pane"
+                      hx-swap="innerHTML"
+                      hx-confirm="Remove target {{.}} from {{$loc.Source.Path}}? This opens a PR."
+                      style="display:inline">
+                    <input type="hidden" name="location" value="https://github.com/{{$loc.Source.Owner}}/{{$loc.Source.Repo}}/blob/{{$loc.Source.Ref}}/{{$loc.Source.Path}}">
+                    <input type="hidden" name="target" value="{{.}}">
+                    <button class="btn btn-sm btn-danger" type="submit" title="Open PR removing this target">&#x2715; {{.}}</button>
+                </form>
+                {{end}}
+            {{else}}
+                <form hx-post="/delete-resource"
+                      hx-target="#action-pane"
+                      hx-swap="innerHTML"
+                      hx-confirm="Delete {{.Entity.Kind}}/{{.Entity.Metadata.Name}} from Git? This opens a PR removing the file and the parent target."
+                      style="display:inline">
+                    <input type="hidden" name="root" value="{{$.RootURL}}">
+                    <input type="hidden" name="kind" value="{{.Entity.Kind}}">
+                    <input type="hidden" name="name" value="{{.Entity.Metadata.Name}}">
+                    <input type="hidden" name="namespace" value="{{.Entity.Metadata.Namespace}}">
+                    <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                </form>
+            {{end}}
+        </div>
+    </div>
+    {{if .Broken}}
+    <ul>
+        {{range .Broken}}
+        <li class="node">
+            <div class="node-line">
+                <span class="badge badge-broken">broken</span>
+                <span class="name">{{.Target}}</span>
+                <span class="badge badge-source">{{.Error}}</span>
+            </div>
+        </li>
+        {{end}}
+    </ul>
+    {{end}}
+    {{if .Children}}
+    <ul>
+        {{range .Children}}{{template "node" .}}{{end}}
+    </ul>
+    {{end}}
+</li>
+{{end}}
+
+<div class="panel">
+    <h2>Tree &mdash; rooted at {{.RootURL}}</h2>
+    {{if .Roots}}
+    <ul class="tree">
+        {{range .Roots}}{{template "node" .}}{{end}}
+    </ul>
+    {{else}}
+    <div class="empty-state">No entities found at this root.</div>
+    {{end}}
+</div>
+
+<div class="panel">
+    <h2>Resources &mdash; flat ({{len .Resources}})</h2>
+    {{if .Resources}}
+    <ul class="tree">
+        {{range .Resources}}
+        <li class="node">
+            <div class="node-line">
+                <span class="badge badge-kind">{{.Kind}}</span>
+                <span class="name">{{.Name}}</span>
+                {{if .Namespace}}<span class="badge badge-namespace">{{.Namespace}}</span>{{end}}
+                <span class="badge badge-source">{{.Source.Owner}}/{{.Source.Repo}}:{{.Source.Path}}</span>
+                <div class="actions">
+                    <form hx-post="/delete-resource"
+                          hx-target="#action-pane"
+                          hx-swap="innerHTML"
+                          hx-confirm="Delete {{.Kind}}/{{.Name}}? Opens a PR."
+                          style="display:inline">
+                        <input type="hidden" name="root" value="{{$.RootURL}}">
+                        <input type="hidden" name="kind" value="{{.Kind}}">
+                        <input type="hidden" name="name" value="{{.Name}}">
+                        <input type="hidden" name="namespace" value="{{.Namespace}}">
+                        <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </li>
+        {{end}}
+    </ul>
+    {{end}}
+</div>

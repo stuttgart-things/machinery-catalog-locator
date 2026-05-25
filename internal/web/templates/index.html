@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>machinery-catalog-locator</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/stuttgart-things/docs/main/hugo/sthings-argo.png">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --border: #2a2d3a;
+            --text: #e1e4ed;
+            --text-muted: #8b8fa3;
+            --accent: #6c8aff;
+            --green: #4ade80;
+            --red: #f87171;
+            --yellow: #fbbf24;
+            --purple: #c084fc;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.6;
+        }
+        .container { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1.5rem; padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        header h1 { font-size: 1.5rem; font-weight: 600; }
+        header h1 span { color: var(--accent); }
+        .status-bar {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.85rem; color: var(--text-muted);
+        }
+        .htmx-indicator { display: none; color: var(--accent); font-size: 0.85rem; }
+        .htmx-request .htmx-indicator { display: inline; }
+
+        form.root-form {
+            display: flex; gap: 0.5rem; margin-bottom: 1.5rem;
+        }
+        input[type="text"], input[type="url"] {
+            flex: 1; padding: 0.55rem 0.8rem; background: var(--surface);
+            border: 1px solid var(--border); border-radius: 6px;
+            color: var(--text); font-size: 0.9rem;
+            font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+        }
+        input:focus { outline: none; border-color: var(--accent); }
+        button.btn {
+            padding: 0.55rem 1.1rem; border: 1px solid var(--accent);
+            border-radius: 6px; background: rgba(108, 138, 255, 0.1);
+            color: var(--accent); cursor: pointer; font-size: 0.9rem;
+            transition: all 0.15s;
+        }
+        button.btn:hover { background: rgba(108, 138, 255, 0.2); }
+        button.btn-danger { border-color: var(--red); color: var(--red); background: rgba(248, 113, 113, 0.08); }
+        button.btn-danger:hover { background: rgba(248, 113, 113, 0.18); }
+        button.btn-sm { padding: 0.25rem 0.6rem; font-size: 0.75rem; }
+
+        .panel {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1rem;
+        }
+        .panel h2 {
+            font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 0.05em; color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+        .empty-state {
+            text-align: center; padding: 2.5rem; color: var(--text-muted);
+            background: var(--surface); border: 1px dashed var(--border);
+            border-radius: 8px;
+        }
+
+        ul.tree { list-style: none; margin-left: 0; }
+        ul.tree ul { list-style: none; margin-left: 1.25rem; padding-left: 0.75rem; border-left: 1px solid var(--border); }
+        li.node { padding: 0.35rem 0; }
+        .node-line { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .node-line .badge { white-space: nowrap; }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            padding: 0.15rem 0.55rem; border-radius: 4px;
+            font-size: 0.75rem; font-weight: 500;
+        }
+        .badge-location { background: rgba(192, 132, 252, 0.12); color: var(--purple); }
+        .badge-kind     { background: rgba(108, 138, 255, 0.12); color: var(--accent); }
+        .badge-broken   { background: rgba(248, 113, 113, 0.12); color: var(--red); }
+        .badge-source   { background: rgba(139, 143, 163, 0.12); color: var(--text-muted); font-family: monospace; font-size: 0.7rem; }
+        .badge-target   { background: rgba(251, 191, 36, 0.10); color: var(--yellow); font-family: monospace; font-size: 0.7rem; }
+        .badge-namespace{ background: rgba(74, 222, 128, 0.10); color: var(--green); font-family: monospace; font-size: 0.7rem; }
+        .name { font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace; font-size: 0.9rem; }
+        .actions { margin-left: auto; display: flex; gap: 0.4rem; }
+
+        .alert { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
+        .alert-ok    { background: rgba(74, 222, 128, 0.08); border: 1px solid var(--green); color: var(--green); }
+        .alert-error { background: rgba(248, 113, 113, 0.08); border: 1px solid var(--red); color: var(--red); }
+        .alert a { color: inherit; text-decoration: underline; }
+
+        details > summary { cursor: pointer; color: var(--text-muted); font-size: 0.8rem; }
+        details[open] > summary { color: var(--text); }
+
+        footer {
+            margin-top: 2rem; padding: 1rem 0;
+            border-top: 1px solid var(--border);
+            display: flex; justify-content: center; gap: 2rem;
+            font-size: 0.75rem; color: var(--text-muted);
+        }
+        .footer-item { display: flex; align-items: center; gap: 0.35rem; }
+        .footer-value { color: #94a3b8; font-family: monospace; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1><span>machinery-catalog-locator</span> &mdash; gitops view</h1>
+        <div class="status-bar">
+            <span class="htmx-indicator" id="spinner">loading...</span>
+        </div>
+    </header>
+
+    <form class="root-form"
+          hx-get="/tree"
+          hx-target="#tree-pane"
+          hx-indicator="#spinner"
+          hx-push-url="true">
+        <input type="url"
+               name="root"
+               placeholder="https://github.com/owner/repo/blob/main/all-locations.yaml"
+               value="{{.RootURL}}"
+               required>
+        <button class="btn" type="submit">Resolve</button>
+    </form>
+
+    <div id="action-pane"></div>
+
+    <div id="tree-pane"
+         {{if .RootURL}}hx-get="/tree?root={{.RootURL}}" hx-trigger="load" hx-indicator="#spinner"{{end}}>
+        {{if not .RootURL}}
+        <div class="empty-state">
+            Enter a root URL above to resolve a catalog. Targets are
+            followed recursively; the tree below shows every Location and
+            every leaf resource the catalog reaches from the entry point.
+        </div>
+        {{end}}
+    </div>
+
+    <footer>
+        <div class="footer-item"><span>version</span> <span class="footer-value">{{.Build.Version}}</span></div>
+        <div class="footer-item"><span>commit</span> <span class="footer-value">{{.Build.Commit}}</span></div>
+        <div class="footer-item"><span>built</span> <span class="footer-value">{{.Build.Date}}</span></div>
+        <div class="footer-item" style="margin-left:auto">
+            a <a href="https://github.com/stuttgart-things" target="_blank" style="color:#818cf8;text-decoration:none">stuttgart-things</a> project
+            <img src="https://raw.githubusercontent.com/stuttgart-things/docs/main/hugo/sthings-logo.png" alt="sthings" style="height:24px;vertical-align:middle">
+        </div>
+    </footer>
+</div>
+</body>
+</html>

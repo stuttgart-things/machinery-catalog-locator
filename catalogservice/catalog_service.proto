@@ -1,0 +1,138 @@
+syntax = "proto3";
+
+package catalogservice;
+
+option go_package = "github.com/stuttgart-things/machinery-catalog-locator/catalogservice";
+
+// SourceRef pinpoints a file in a Git repository at a given ref.
+message SourceRef {
+    string owner = 1;
+    string repo = 2;
+    string ref = 3;
+    string path = 4;
+}
+
+// EntityMetadata mirrors the Backstage entity metadata block.
+message EntityMetadata {
+    string name = 1;
+    string namespace = 2;
+    string title = 3;
+    string description = 4;
+    map<string, string> annotations = 5;
+}
+
+// Entity is a Backstage catalog entity. For Location entities, `targets`
+// carries the full set of spec.target + spec.targets values.
+message Entity {
+    string api_version = 1;
+    string kind = 2;
+    EntityMetadata metadata = 3;
+    repeated string targets = 4;
+}
+
+// BrokenTarget records a target that could not be resolved.
+message BrokenTarget {
+    string target = 1;
+    string error = 2;
+}
+
+// Node is a resolved entity in the catalog graph.
+message Node {
+    SourceRef source = 1;
+    int32 doc_index = 2;
+    int32 file_doc_count = 3;
+    Entity entity = 4;
+    // ViaTarget is the exact target string in the parent location that
+    // brought us here. Empty on root nodes.
+    string via_target = 5;
+    repeated Node children = 6;
+    repeated BrokenTarget broken = 7;
+}
+
+// Resource is a flattened, non-Location entity. The full ancestry is
+// dropped — only the fields the umbrella tool needs to address it.
+message Resource {
+    string kind = 1;
+    string name = 2;
+    string namespace = 3;
+    SourceRef source = 4;
+    string via_target = 5;
+}
+
+message ResolveTreeRequest {
+    string root_url = 1; // GitHub blob URL of the root location.yaml
+}
+
+message ResolveTreeResponse {
+    repeated Node roots = 1;
+}
+
+message ListResourcesRequest {
+    string root_url = 1;
+    // Optional case-insensitive kind filter. Empty matches all kinds.
+    string kind = 2;
+}
+
+message ListResourcesResponse {
+    repeated Resource resources = 1;
+}
+
+message RemoveTargetRequest {
+    string location_url = 1; // blob URL of the location.yaml to edit
+    string target = 2;
+}
+
+message RemoveTargetResponse {
+    string pull_request_url = 1;
+}
+
+message DeleteResourceRequest {
+    string root_url = 1;
+    string kind = 2;
+    string name = 3;
+    string namespace = 4;
+}
+
+message DeleteResourceResponse {
+    string pull_request_url = 1;
+    // ParentTouched is true when the parent location was edited in the
+    // same PR (false on cross-repo references).
+    bool parent_touched = 2;
+    // DocumentExtracted is true when only one YAML document was carved
+    // out of a multi-doc file instead of removing the whole file.
+    bool document_extracted = 3;
+}
+
+// EventType classifies a TreeEvent on the watched catalog.
+enum EventType {
+    ADDED = 0;
+    MODIFIED = 1;
+    DELETED = 2;
+}
+
+// TreeEvent is a single change observed between two poll cycles.
+message TreeEvent {
+    EventType type = 1;
+    Node node = 2;
+}
+
+message WatchTreeRequest {
+    string root_url = 1;
+    // Polling interval in seconds. Clamped to [5, 3600]; 0 -> default 30s.
+    int32 interval_seconds = 2;
+}
+
+service CatalogService {
+    // ResolveTree returns the full catalog graph rooted at the given URL.
+    rpc ResolveTree(ResolveTreeRequest) returns (ResolveTreeResponse);
+    // ListResources returns a flat list of all non-Location entities.
+    rpc ListResources(ListResourcesRequest) returns (ListResourcesResponse);
+    // RemoveTarget removes a target from a location.yaml via PR.
+    rpc RemoveTarget(RemoveTargetRequest) returns (RemoveTargetResponse);
+    // DeleteResource deletes a resource from Git and removes the
+    // referring target from its parent location in a single PR.
+    rpc DeleteResource(DeleteResourceRequest) returns (DeleteResourceResponse);
+    // WatchTree replays the current tree as ADDED events, then streams
+    // diffs against successive poll snapshots until the client leaves.
+    rpc WatchTree(WatchTreeRequest) returns (stream TreeEvent);
+}
