@@ -3,6 +3,10 @@ kind: Component
 metadata:
   name: api-gateway
   description: Edge proxy for all platform-team services.
+  annotations:
+    machinery.stuttgart-things.com/crossplane-kind: XApiGateway
+    machinery.stuttgart-things.com/crossplane-api-version: platform.stuttgart-things.com/v1alpha1
+    machinery.stuttgart-things.com/crossplane-xr: https://github.com/stuttgart-things/catalog/blob/main/crossplane-claims/platform/api-gateway-xr.yaml
 spec:
   type: service
   lifecycle: production

@@ -71,6 +71,9 @@ func (s *Server) ListResources(ctx context.Context, req *catalogservice.ListReso
 }
 
 func (s *Server) RemoveTarget(ctx context.Context, req *catalogservice.RemoveTargetRequest) (*catalogservice.RemoveTargetResponse, error) {
+	if s.PR == nil {
+		return nil, status.Error(codes.Unimplemented, "PR service not configured (running in local-root mode?)")
+	}
 	locRef, err := catalog.ParseBlobURL(req.GetLocationUrl())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "location_url: %v", err)
@@ -105,6 +108,9 @@ func (s *Server) RemoveTarget(ctx context.Context, req *catalogservice.RemoveTar
 }
 
 func (s *Server) DeleteResource(ctx context.Context, req *catalogservice.DeleteResourceRequest) (*catalogservice.DeleteResourceResponse, error) {
+	if s.PR == nil {
+		return nil, status.Error(codes.Unimplemented, "PR service not configured (running in local-root mode?)")
+	}
 	root, err := catalog.ParseBlobURL(req.GetRootUrl())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "root_url: %v", err)
@@ -179,6 +185,87 @@ func (s *Server) DeleteResource(ctx context.Context, req *catalogservice.DeleteR
 		ParentTouched:     parentTouched,
 		DocumentExtracted: docExtracted,
 	}, nil
+}
+
+// GetEntityManifest fetches the Crossplane Claim/XR manifests linked
+// from a catalog entity via the machinery.stuttgart-things.com/crossplane-*
+// annotations. The catalog is resolved once to locate the entity, then
+// each annotated manifest is read through s.Reader using the same
+// credentials as the rest of the service.
+func (s *Server) GetEntityManifest(ctx context.Context, req *catalogservice.GetEntityManifestRequest) (*catalogservice.GetEntityManifestResponse, error) {
+	root, err := catalog.ParseBlobURL(req.GetRootUrl())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "root_url: %v", err)
+	}
+	if req.GetKind() == "" || req.GetName() == "" {
+		return nil, status.Error(codes.InvalidArgument, "kind and name are required")
+	}
+
+	nodes, err := s.Resolver.Resolve(ctx, root)
+	if err != nil {
+		return nil, status.Errorf(codes.Unavailable, "resolve: %v", err)
+	}
+	node, ok := catalog.Find(nodes, req.GetKind(), req.GetName(), req.GetNamespace())
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "%s/%s not in tree", req.GetKind(), req.GetName())
+	}
+
+	refs := catalog.CrossplaneRefs(node.Entity)
+	if len(refs) == 0 {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"%s/%s has no machinery.stuttgart-things.com/crossplane-* annotations",
+			req.GetKind(), req.GetName())
+	}
+
+	out := &catalogservice.GetEntityManifestResponse{}
+	for _, ref := range refs {
+		body, err := s.Reader.Read(ctx, ref.Source)
+		if err != nil {
+			return nil, status.Errorf(codes.Unavailable, "read %s: %v", ref.Source.Path, err)
+		}
+		out.Manifests = append(out.Manifests, &catalogservice.CrossplaneManifest{
+			LinkKind:   ref.Kind,
+			Annotation: ref.Annotation,
+			Url:        ref.URL,
+			Source:     toProtoSource(ref.Source),
+			Body:       body,
+		})
+	}
+	return out, nil
+}
+
+// ListEntitiesByCrossplaneSource is the reverse of GetEntityManifest:
+// given a Crossplane manifest URL, return the catalog entities whose
+// machinery.stuttgart-things.com/crossplane-* annotations reference it.
+// Matching is on the URL's path only — owner/repo/ref are ignored,
+// consistent with how LocalReader and the rest of the package treat
+// blob URLs.
+func (s *Server) ListEntitiesByCrossplaneSource(ctx context.Context, req *catalogservice.ListEntitiesByCrossplaneSourceRequest) (*catalogservice.ListEntitiesByCrossplaneSourceResponse, error) {
+	root, err := catalog.ParseBlobURL(req.GetRootUrl())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "root_url: %v", err)
+	}
+	manifestRef, err := catalog.ParseBlobURL(req.GetManifestUrl())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "manifest_url: %v", err)
+	}
+
+	nodes, err := s.Resolver.Resolve(ctx, root)
+	if err != nil {
+		return nil, status.Errorf(codes.Unavailable, "resolve: %v", err)
+	}
+
+	out := &catalogservice.ListEntitiesByCrossplaneSourceResponse{}
+	for _, n := range catalog.FindByCrossplaneSource(nodes, manifestRef.Path) {
+		out.Entities = append(out.Entities, &catalogservice.Resource{
+			Kind:      n.Entity.Kind,
+			Name:      n.Entity.Metadata.Name,
+			Namespace: n.Entity.Metadata.Namespace,
+			Source:    toProtoSource(n.Source),
+			ViaTarget: n.ViaTarget,
+		})
+	}
+	return out, nil
 }
 
 // branchName builds a deterministic-ish branch name with a unix-second

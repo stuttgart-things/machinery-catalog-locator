@@ -1079,6 +1079,317 @@ func (x *WatchTreeRequest) GetIntervalSeconds() int32 {
 	return 0
 }
 
+// CrossplaneManifest is one Crossplane Claim or XR linked from a
+// catalog entity via the machinery.stuttgart-things.com/crossplane-*
+// annotations.
+type CrossplaneManifest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Link kind, not the manifest's k8s kind. Either "claim" or "xr".
+	LinkKind string `protobuf:"bytes,1,opt,name=link_kind,json=linkKind,proto3" json:"link_kind,omitempty"`
+	// Annotation key that produced this ref, e.g.
+	// "machinery.stuttgart-things.com/crossplane-claim".
+	Annotation string `protobuf:"bytes,2,opt,name=annotation,proto3" json:"annotation,omitempty"`
+	// Raw annotation value (the blob URL).
+	Url string `protobuf:"bytes,3,opt,name=url,proto3" json:"url,omitempty"`
+	// SourceRef parsed from `url` (owner/repo/ref/path).
+	Source *SourceRef `protobuf:"bytes,4,opt,name=source,proto3" json:"source,omitempty"`
+	// The manifest YAML bytes fetched from `source`.
+	Body []byte `protobuf:"bytes,5,opt,name=body,proto3" json:"body,omitempty"`
+}
+
+func (x *CrossplaneManifest) Reset() {
+	*x = CrossplaneManifest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_catalogservice_catalog_service_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CrossplaneManifest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CrossplaneManifest) ProtoMessage() {}
+
+func (x *CrossplaneManifest) ProtoReflect() protoreflect.Message {
+	mi := &file_catalogservice_catalog_service_proto_msgTypes[16]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CrossplaneManifest.ProtoReflect.Descriptor instead.
+func (*CrossplaneManifest) Descriptor() ([]byte, []int) {
+	return file_catalogservice_catalog_service_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *CrossplaneManifest) GetLinkKind() string {
+	if x != nil {
+		return x.LinkKind
+	}
+	return ""
+}
+
+func (x *CrossplaneManifest) GetAnnotation() string {
+	if x != nil {
+		return x.Annotation
+	}
+	return ""
+}
+
+func (x *CrossplaneManifest) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
+}
+
+func (x *CrossplaneManifest) GetSource() *SourceRef {
+	if x != nil {
+		return x.Source
+	}
+	return nil
+}
+
+func (x *CrossplaneManifest) GetBody() []byte {
+	if x != nil {
+		return x.Body
+	}
+	return nil
+}
+
+type GetEntityManifestRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	RootUrl   string `protobuf:"bytes,1,opt,name=root_url,json=rootUrl,proto3" json:"root_url,omitempty"`
+	Kind      string `protobuf:"bytes,2,opt,name=kind,proto3" json:"kind,omitempty"`
+	Name      string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Namespace string `protobuf:"bytes,4,opt,name=namespace,proto3" json:"namespace,omitempty"`
+}
+
+func (x *GetEntityManifestRequest) Reset() {
+	*x = GetEntityManifestRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_catalogservice_catalog_service_proto_msgTypes[17]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetEntityManifestRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetEntityManifestRequest) ProtoMessage() {}
+
+func (x *GetEntityManifestRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_catalogservice_catalog_service_proto_msgTypes[17]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetEntityManifestRequest.ProtoReflect.Descriptor instead.
+func (*GetEntityManifestRequest) Descriptor() ([]byte, []int) {
+	return file_catalogservice_catalog_service_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *GetEntityManifestRequest) GetRootUrl() string {
+	if x != nil {
+		return x.RootUrl
+	}
+	return ""
+}
+
+func (x *GetEntityManifestRequest) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *GetEntityManifestRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *GetEntityManifestRequest) GetNamespace() string {
+	if x != nil {
+		return x.Namespace
+	}
+	return ""
+}
+
+type GetEntityManifestResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Manifests []*CrossplaneManifest `protobuf:"bytes,1,rep,name=manifests,proto3" json:"manifests,omitempty"`
+}
+
+func (x *GetEntityManifestResponse) Reset() {
+	*x = GetEntityManifestResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_catalogservice_catalog_service_proto_msgTypes[18]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetEntityManifestResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetEntityManifestResponse) ProtoMessage() {}
+
+func (x *GetEntityManifestResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_catalogservice_catalog_service_proto_msgTypes[18]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetEntityManifestResponse.ProtoReflect.Descriptor instead.
+func (*GetEntityManifestResponse) Descriptor() ([]byte, []int) {
+	return file_catalogservice_catalog_service_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *GetEntityManifestResponse) GetManifests() []*CrossplaneManifest {
+	if x != nil {
+		return x.Manifests
+	}
+	return nil
+}
+
+type ListEntitiesByCrossplaneSourceRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	RootUrl string `protobuf:"bytes,1,opt,name=root_url,json=rootUrl,proto3" json:"root_url,omitempty"`
+	// manifest_url is the GitHub blob URL of a Crossplane Claim/XR.
+	// Matching is on the URL's path component only — owner/repo/ref
+	// are ignored, mirroring LocalReader semantics.
+	ManifestUrl string `protobuf:"bytes,2,opt,name=manifest_url,json=manifestUrl,proto3" json:"manifest_url,omitempty"`
+}
+
+func (x *ListEntitiesByCrossplaneSourceRequest) Reset() {
+	*x = ListEntitiesByCrossplaneSourceRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_catalogservice_catalog_service_proto_msgTypes[19]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListEntitiesByCrossplaneSourceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListEntitiesByCrossplaneSourceRequest) ProtoMessage() {}
+
+func (x *ListEntitiesByCrossplaneSourceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_catalogservice_catalog_service_proto_msgTypes[19]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListEntitiesByCrossplaneSourceRequest.ProtoReflect.Descriptor instead.
+func (*ListEntitiesByCrossplaneSourceRequest) Descriptor() ([]byte, []int) {
+	return file_catalogservice_catalog_service_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *ListEntitiesByCrossplaneSourceRequest) GetRootUrl() string {
+	if x != nil {
+		return x.RootUrl
+	}
+	return ""
+}
+
+func (x *ListEntitiesByCrossplaneSourceRequest) GetManifestUrl() string {
+	if x != nil {
+		return x.ManifestUrl
+	}
+	return ""
+}
+
+type ListEntitiesByCrossplaneSourceResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Entities []*Resource `protobuf:"bytes,1,rep,name=entities,proto3" json:"entities,omitempty"`
+}
+
+func (x *ListEntitiesByCrossplaneSourceResponse) Reset() {
+	*x = ListEntitiesByCrossplaneSourceResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_catalogservice_catalog_service_proto_msgTypes[20]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListEntitiesByCrossplaneSourceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListEntitiesByCrossplaneSourceResponse) ProtoMessage() {}
+
+func (x *ListEntitiesByCrossplaneSourceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_catalogservice_catalog_service_proto_msgTypes[20]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListEntitiesByCrossplaneSourceResponse.ProtoReflect.Descriptor instead.
+func (*ListEntitiesByCrossplaneSourceResponse) Descriptor() ([]byte, []int) {
+	return file_catalogservice_catalog_service_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ListEntitiesByCrossplaneSourceResponse) GetEntities() []*Resource {
+	if x != nil {
+		return x.Entities
+	}
+	return nil
+}
+
 var File_catalogservice_catalog_service_proto protoreflect.FileDescriptor
 
 var file_catalogservice_catalog_service_proto_rawDesc = []byte{
@@ -1206,10 +1517,47 @@ var file_catalogservice_catalog_service_proto_rawDesc = []byte{
 	0x01, 0x28, 0x09, 0x52, 0x07, 0x72, 0x6f, 0x6f, 0x74, 0x55, 0x72, 0x6c, 0x12, 0x29, 0x0a, 0x10,
 	0x69, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x5f, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73,
 	0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c,
-	0x53, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x2a, 0x31, 0x0a, 0x09, 0x45, 0x76, 0x65, 0x6e, 0x74,
+	0x53, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x22, 0xaa, 0x01, 0x0a, 0x12, 0x43, 0x72, 0x6f, 0x73,
+	0x73, 0x70, 0x6c, 0x61, 0x6e, 0x65, 0x4d, 0x61, 0x6e, 0x69, 0x66, 0x65, 0x73, 0x74, 0x12, 0x1b,
+	0x0a, 0x09, 0x6c, 0x69, 0x6e, 0x6b, 0x5f, 0x6b, 0x69, 0x6e, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x08, 0x6c, 0x69, 0x6e, 0x6b, 0x4b, 0x69, 0x6e, 0x64, 0x12, 0x1e, 0x0a, 0x0a, 0x61,
+	0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x0a, 0x61, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x10, 0x0a, 0x03, 0x75,
+	0x72, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x72, 0x6c, 0x12, 0x31, 0x0a,
+	0x06, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
+	0x63, 0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x53,
+	0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65, 0x66, 0x52, 0x06, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65,
+	0x12, 0x12, 0x0a, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04,
+	0x62, 0x6f, 0x64, 0x79, 0x22, 0x7b, 0x0a, 0x18, 0x47, 0x65, 0x74, 0x45, 0x6e, 0x74, 0x69, 0x74,
+	0x79, 0x4d, 0x61, 0x6e, 0x69, 0x66, 0x65, 0x73, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x19, 0x0a, 0x08, 0x72, 0x6f, 0x6f, 0x74, 0x5f, 0x75, 0x72, 0x6c, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x07, 0x72, 0x6f, 0x6f, 0x74, 0x55, 0x72, 0x6c, 0x12, 0x12, 0x0a, 0x04, 0x6b,
+	0x69, 0x6e, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6b, 0x69, 0x6e, 0x64, 0x12,
+	0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e,
+	0x61, 0x6d, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63,
+	0x65, 0x22, 0x5d, 0x0a, 0x19, 0x47, 0x65, 0x74, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x4d, 0x61,
+	0x6e, 0x69, 0x66, 0x65, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x40,
+	0x0a, 0x09, 0x6d, 0x61, 0x6e, 0x69, 0x66, 0x65, 0x73, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x22, 0x2e, 0x63, 0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x73, 0x65, 0x72, 0x76, 0x69,
+	0x63, 0x65, 0x2e, 0x43, 0x72, 0x6f, 0x73, 0x73, 0x70, 0x6c, 0x61, 0x6e, 0x65, 0x4d, 0x61, 0x6e,
+	0x69, 0x66, 0x65, 0x73, 0x74, 0x52, 0x09, 0x6d, 0x61, 0x6e, 0x69, 0x66, 0x65, 0x73, 0x74, 0x73,
+	0x22, 0x65, 0x0a, 0x25, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73,
+	0x42, 0x79, 0x43, 0x72, 0x6f, 0x73, 0x73, 0x70, 0x6c, 0x61, 0x6e, 0x65, 0x53, 0x6f, 0x75, 0x72,
+	0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x72, 0x6f, 0x6f,
+	0x74, 0x5f, 0x75, 0x72, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x72, 0x6f, 0x6f,
+	0x74, 0x55, 0x72, 0x6c, 0x12, 0x21, 0x0a, 0x0c, 0x6d, 0x61, 0x6e, 0x69, 0x66, 0x65, 0x73, 0x74,
+	0x5f, 0x75, 0x72, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x6d, 0x61, 0x6e, 0x69,
+	0x66, 0x65, 0x73, 0x74, 0x55, 0x72, 0x6c, 0x22, 0x5e, 0x0a, 0x26, 0x4c, 0x69, 0x73, 0x74, 0x45,
+	0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x42, 0x79, 0x43, 0x72, 0x6f, 0x73, 0x73, 0x70, 0x6c,
+	0x61, 0x6e, 0x65, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x34, 0x0a, 0x08, 0x65, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x18, 0x01, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x63, 0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x73, 0x65, 0x72,
+	0x76, 0x69, 0x63, 0x65, 0x2e, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x08, 0x65,
+	0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x2a, 0x31, 0x0a, 0x09, 0x45, 0x76, 0x65, 0x6e, 0x74,
 	0x54, 0x79, 0x70, 0x65, 0x12, 0x09, 0x0a, 0x05, 0x41, 0x44, 0x44, 0x45, 0x44, 0x10, 0x00, 0x12,
 	0x0c, 0x0a, 0x08, 0x4d, 0x4f, 0x44, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x01, 0x12, 0x0b, 0x0a,
-	0x07, 0x44, 0x45, 0x4c, 0x45, 0x54, 0x45, 0x44, 0x10, 0x02, 0x32, 0xce, 0x03, 0x0a, 0x0e, 0x43,
+	0x07, 0x44, 0x45, 0x4c, 0x45, 0x54, 0x45, 0x44, 0x10, 0x02, 0x32, 0xca, 0x05, 0x0a, 0x0e, 0x43,
 	0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x56, 0x0a,
 	0x0b, 0x52, 0x65, 0x73, 0x6f, 0x6c, 0x76, 0x65, 0x54, 0x72, 0x65, 0x65, 0x12, 0x22, 0x2e, 0x63,
 	0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x52, 0x65,
@@ -1238,12 +1586,28 @@ var file_catalogservice_catalog_service_proto_rawDesc = []byte{
 	0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x57, 0x61,
 	0x74, 0x63, 0x68, 0x54, 0x72, 0x65, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x19,
 	0x2e, 0x63, 0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e,
-	0x54, 0x72, 0x65, 0x65, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x30, 0x01, 0x42, 0x46, 0x5a, 0x44, 0x67,
-	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x73, 0x74, 0x75, 0x74, 0x74, 0x67,
-	0x61, 0x72, 0x74, 0x2d, 0x74, 0x68, 0x69, 0x6e, 0x67, 0x73, 0x2f, 0x6d, 0x61, 0x63, 0x68, 0x69,
-	0x6e, 0x65, 0x72, 0x79, 0x2d, 0x63, 0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x2d, 0x6c, 0x6f, 0x63,
-	0x61, 0x74, 0x6f, 0x72, 0x2f, 0x63, 0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x73, 0x65, 0x72, 0x76,
-	0x69, 0x63, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x54, 0x72, 0x65, 0x65, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x30, 0x01, 0x12, 0x68, 0x0a, 0x11, 0x47,
+	0x65, 0x74, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x4d, 0x61, 0x6e, 0x69, 0x66, 0x65, 0x73, 0x74,
+	0x12, 0x28, 0x2e, 0x63, 0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63,
+	0x65, 0x2e, 0x47, 0x65, 0x74, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x79, 0x4d, 0x61, 0x6e, 0x69, 0x66,
+	0x65, 0x73, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x63, 0x61, 0x74,
+	0x61, 0x6c, 0x6f, 0x67, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x47, 0x65, 0x74, 0x45,
+	0x6e, 0x74, 0x69, 0x74, 0x79, 0x4d, 0x61, 0x6e, 0x69, 0x66, 0x65, 0x73, 0x74, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x8f, 0x01, 0x0a, 0x1e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e,
+	0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x42, 0x79, 0x43, 0x72, 0x6f, 0x73, 0x73, 0x70, 0x6c, 0x61,
+	0x6e, 0x65, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x35, 0x2e, 0x63, 0x61, 0x74, 0x61, 0x6c,
+	0x6f, 0x67, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e,
+	0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x42, 0x79, 0x43, 0x72, 0x6f, 0x73, 0x73, 0x70, 0x6c, 0x61,
+	0x6e, 0x65, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x36, 0x2e, 0x63, 0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
+	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x74, 0x69, 0x74, 0x69, 0x65, 0x73, 0x42, 0x79, 0x43,
+	0x72, 0x6f, 0x73, 0x73, 0x70, 0x6c, 0x61, 0x6e, 0x65, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x46, 0x5a, 0x44, 0x67, 0x69, 0x74, 0x68, 0x75,
+	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x73, 0x74, 0x75, 0x74, 0x74, 0x67, 0x61, 0x72, 0x74, 0x2d,
+	0x74, 0x68, 0x69, 0x6e, 0x67, 0x73, 0x2f, 0x6d, 0x61, 0x63, 0x68, 0x69, 0x6e, 0x65, 0x72, 0x79,
+	0x2d, 0x63, 0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x2d, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x6f, 0x72,
+	0x2f, 0x63, 0x61, 0x74, 0x61, 0x6c, 0x6f, 0x67, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1259,29 +1623,34 @@ func file_catalogservice_catalog_service_proto_rawDescGZIP() []byte {
 }
 
 var file_catalogservice_catalog_service_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_catalogservice_catalog_service_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_catalogservice_catalog_service_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_catalogservice_catalog_service_proto_goTypes = []interface{}{
-	(EventType)(0),                 // 0: catalogservice.EventType
-	(*SourceRef)(nil),              // 1: catalogservice.SourceRef
-	(*EntityMetadata)(nil),         // 2: catalogservice.EntityMetadata
-	(*Entity)(nil),                 // 3: catalogservice.Entity
-	(*BrokenTarget)(nil),           // 4: catalogservice.BrokenTarget
-	(*Node)(nil),                   // 5: catalogservice.Node
-	(*Resource)(nil),               // 6: catalogservice.Resource
-	(*ResolveTreeRequest)(nil),     // 7: catalogservice.ResolveTreeRequest
-	(*ResolveTreeResponse)(nil),    // 8: catalogservice.ResolveTreeResponse
-	(*ListResourcesRequest)(nil),   // 9: catalogservice.ListResourcesRequest
-	(*ListResourcesResponse)(nil),  // 10: catalogservice.ListResourcesResponse
-	(*RemoveTargetRequest)(nil),    // 11: catalogservice.RemoveTargetRequest
-	(*RemoveTargetResponse)(nil),   // 12: catalogservice.RemoveTargetResponse
-	(*DeleteResourceRequest)(nil),  // 13: catalogservice.DeleteResourceRequest
-	(*DeleteResourceResponse)(nil), // 14: catalogservice.DeleteResourceResponse
-	(*TreeEvent)(nil),              // 15: catalogservice.TreeEvent
-	(*WatchTreeRequest)(nil),       // 16: catalogservice.WatchTreeRequest
-	nil,                            // 17: catalogservice.EntityMetadata.AnnotationsEntry
+	(EventType)(0),                                 // 0: catalogservice.EventType
+	(*SourceRef)(nil),                              // 1: catalogservice.SourceRef
+	(*EntityMetadata)(nil),                         // 2: catalogservice.EntityMetadata
+	(*Entity)(nil),                                 // 3: catalogservice.Entity
+	(*BrokenTarget)(nil),                           // 4: catalogservice.BrokenTarget
+	(*Node)(nil),                                   // 5: catalogservice.Node
+	(*Resource)(nil),                               // 6: catalogservice.Resource
+	(*ResolveTreeRequest)(nil),                     // 7: catalogservice.ResolveTreeRequest
+	(*ResolveTreeResponse)(nil),                    // 8: catalogservice.ResolveTreeResponse
+	(*ListResourcesRequest)(nil),                   // 9: catalogservice.ListResourcesRequest
+	(*ListResourcesResponse)(nil),                  // 10: catalogservice.ListResourcesResponse
+	(*RemoveTargetRequest)(nil),                    // 11: catalogservice.RemoveTargetRequest
+	(*RemoveTargetResponse)(nil),                   // 12: catalogservice.RemoveTargetResponse
+	(*DeleteResourceRequest)(nil),                  // 13: catalogservice.DeleteResourceRequest
+	(*DeleteResourceResponse)(nil),                 // 14: catalogservice.DeleteResourceResponse
+	(*TreeEvent)(nil),                              // 15: catalogservice.TreeEvent
+	(*WatchTreeRequest)(nil),                       // 16: catalogservice.WatchTreeRequest
+	(*CrossplaneManifest)(nil),                     // 17: catalogservice.CrossplaneManifest
+	(*GetEntityManifestRequest)(nil),               // 18: catalogservice.GetEntityManifestRequest
+	(*GetEntityManifestResponse)(nil),              // 19: catalogservice.GetEntityManifestResponse
+	(*ListEntitiesByCrossplaneSourceRequest)(nil),  // 20: catalogservice.ListEntitiesByCrossplaneSourceRequest
+	(*ListEntitiesByCrossplaneSourceResponse)(nil), // 21: catalogservice.ListEntitiesByCrossplaneSourceResponse
+	nil, // 22: catalogservice.EntityMetadata.AnnotationsEntry
 }
 var file_catalogservice_catalog_service_proto_depIdxs = []int32{
-	17, // 0: catalogservice.EntityMetadata.annotations:type_name -> catalogservice.EntityMetadata.AnnotationsEntry
+	22, // 0: catalogservice.EntityMetadata.annotations:type_name -> catalogservice.EntityMetadata.AnnotationsEntry
 	2,  // 1: catalogservice.Entity.metadata:type_name -> catalogservice.EntityMetadata
 	1,  // 2: catalogservice.Node.source:type_name -> catalogservice.SourceRef
 	3,  // 3: catalogservice.Node.entity:type_name -> catalogservice.Entity
@@ -1292,21 +1661,28 @@ var file_catalogservice_catalog_service_proto_depIdxs = []int32{
 	6,  // 8: catalogservice.ListResourcesResponse.resources:type_name -> catalogservice.Resource
 	0,  // 9: catalogservice.TreeEvent.type:type_name -> catalogservice.EventType
 	5,  // 10: catalogservice.TreeEvent.node:type_name -> catalogservice.Node
-	7,  // 11: catalogservice.CatalogService.ResolveTree:input_type -> catalogservice.ResolveTreeRequest
-	9,  // 12: catalogservice.CatalogService.ListResources:input_type -> catalogservice.ListResourcesRequest
-	11, // 13: catalogservice.CatalogService.RemoveTarget:input_type -> catalogservice.RemoveTargetRequest
-	13, // 14: catalogservice.CatalogService.DeleteResource:input_type -> catalogservice.DeleteResourceRequest
-	16, // 15: catalogservice.CatalogService.WatchTree:input_type -> catalogservice.WatchTreeRequest
-	8,  // 16: catalogservice.CatalogService.ResolveTree:output_type -> catalogservice.ResolveTreeResponse
-	10, // 17: catalogservice.CatalogService.ListResources:output_type -> catalogservice.ListResourcesResponse
-	12, // 18: catalogservice.CatalogService.RemoveTarget:output_type -> catalogservice.RemoveTargetResponse
-	14, // 19: catalogservice.CatalogService.DeleteResource:output_type -> catalogservice.DeleteResourceResponse
-	15, // 20: catalogservice.CatalogService.WatchTree:output_type -> catalogservice.TreeEvent
-	16, // [16:21] is the sub-list for method output_type
-	11, // [11:16] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	1,  // 11: catalogservice.CrossplaneManifest.source:type_name -> catalogservice.SourceRef
+	17, // 12: catalogservice.GetEntityManifestResponse.manifests:type_name -> catalogservice.CrossplaneManifest
+	6,  // 13: catalogservice.ListEntitiesByCrossplaneSourceResponse.entities:type_name -> catalogservice.Resource
+	7,  // 14: catalogservice.CatalogService.ResolveTree:input_type -> catalogservice.ResolveTreeRequest
+	9,  // 15: catalogservice.CatalogService.ListResources:input_type -> catalogservice.ListResourcesRequest
+	11, // 16: catalogservice.CatalogService.RemoveTarget:input_type -> catalogservice.RemoveTargetRequest
+	13, // 17: catalogservice.CatalogService.DeleteResource:input_type -> catalogservice.DeleteResourceRequest
+	16, // 18: catalogservice.CatalogService.WatchTree:input_type -> catalogservice.WatchTreeRequest
+	18, // 19: catalogservice.CatalogService.GetEntityManifest:input_type -> catalogservice.GetEntityManifestRequest
+	20, // 20: catalogservice.CatalogService.ListEntitiesByCrossplaneSource:input_type -> catalogservice.ListEntitiesByCrossplaneSourceRequest
+	8,  // 21: catalogservice.CatalogService.ResolveTree:output_type -> catalogservice.ResolveTreeResponse
+	10, // 22: catalogservice.CatalogService.ListResources:output_type -> catalogservice.ListResourcesResponse
+	12, // 23: catalogservice.CatalogService.RemoveTarget:output_type -> catalogservice.RemoveTargetResponse
+	14, // 24: catalogservice.CatalogService.DeleteResource:output_type -> catalogservice.DeleteResourceResponse
+	15, // 25: catalogservice.CatalogService.WatchTree:output_type -> catalogservice.TreeEvent
+	19, // 26: catalogservice.CatalogService.GetEntityManifest:output_type -> catalogservice.GetEntityManifestResponse
+	21, // 27: catalogservice.CatalogService.ListEntitiesByCrossplaneSource:output_type -> catalogservice.ListEntitiesByCrossplaneSourceResponse
+	21, // [21:28] is the sub-list for method output_type
+	14, // [14:21] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_catalogservice_catalog_service_proto_init() }
@@ -1507,6 +1883,66 @@ func file_catalogservice_catalog_service_proto_init() {
 				return nil
 			}
 		}
+		file_catalogservice_catalog_service_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CrossplaneManifest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_catalogservice_catalog_service_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetEntityManifestRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_catalogservice_catalog_service_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetEntityManifestResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_catalogservice_catalog_service_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListEntitiesByCrossplaneSourceRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_catalogservice_catalog_service_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListEntitiesByCrossplaneSourceResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1514,7 +1950,7 @@ func file_catalogservice_catalog_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_catalogservice_catalog_service_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   17,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

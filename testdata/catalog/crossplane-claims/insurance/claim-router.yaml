@@ -1,0 +1,13 @@
+apiVersion: insurance.stuttgart-things.com/v1alpha1
+kind: ClaimRouter
+metadata:
+  name: claim-router
+  namespace: insurance
+  labels:
+    machinery.stuttgart-things.com/catalog-component: claim-router
+spec:
+  parameters:
+    routes: 12
+    backend: stuttgart-things-insurance-core
+  compositionRef:
+    name: claim-router-default

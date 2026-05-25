@@ -7,12 +7,16 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -40,31 +44,18 @@ var (
 func main() {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})))
 
-	cfg, err := config.Load()
+	localRoot := flag.String("local-root", "", "if set, serve from a local fixture directory instead of GitHub (PR-opening RPCs become Unimplemented)")
+	flag.Parse()
+
+	catalogSrv, grpcPort, httpPort, appAuth, err := buildServer(*localRoot)
 	if err != nil {
-		slog.Error("config", "err", err)
+		slog.Error("startup", "err", err)
 		os.Exit(1)
 	}
 
-	client, tokenSource, err := ghforge.NewClient(cfg.GitHub)
+	grpcLis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
 	if err != nil {
-		slog.Error("github client", "err", err)
-		os.Exit(1)
-	}
-
-	reader := ghforge.NewReader(client)
-	resolver := catalog.NewResolver(reader)
-	prService := ghforge.NewPRService(client, tokenSource, cfg.Git)
-
-	catalogSrv := &grpcserver.Server{
-		Resolver: resolver,
-		Reader:   reader,
-		PR:       prService,
-	}
-
-	grpcLis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.GRPCPort))
-	if err != nil {
-		slog.Error("listen grpc", "port", cfg.GRPCPort, "err", err)
+		slog.Error("listen grpc", "port", grpcPort, "err", err)
 		os.Exit(1)
 	}
 
@@ -97,20 +88,20 @@ func main() {
 		os.Exit(1)
 	}
 	httpSrv := &http.Server{
-		Addr:              fmt.Sprintf(":%d", cfg.HTTPPort),
+		Addr:              fmt.Sprintf(":%d", httpPort),
 		Handler:           webSrv.Handler(),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	go func() {
-		slog.Info("http server listening", "port", cfg.HTTPPort)
+		slog.Info("http server listening", "port", httpPort)
 		if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.Error("http serve", "err", err)
 		}
 	}()
 
 	go func() {
-		slog.Info("grpc server listening", "port", cfg.GRPCPort, "app-auth", cfg.GitHub.UsesApp())
+		slog.Info("grpc server listening", "port", grpcPort, "app-auth", appAuth, "local-root", *localRoot)
 		if err := gs.Serve(grpcLis); err != nil {
 			slog.Error("grpc serve", "err", err)
 		}
@@ -129,4 +120,56 @@ func main() {
 	}
 	gs.GracefulStop()
 	slog.Info("stopped")
+}
+
+// buildServer wires the grpcserver.Server depending on whether we're
+// running in GitHub mode or against a local fixture directory.
+//
+// Local mode skips config.Load entirely (no GitHub credentials needed),
+// uses catalog.LocalReader, and leaves Server.PR nil. The PR-opening
+// RPCs (RemoveTarget, DeleteResource) detect the nil PR and return
+// Unimplemented — read-only RPCs work normally.
+func buildServer(localRoot string) (srv *grpcserver.Server, grpcPort, httpPort int, appAuth bool, err error) {
+	if localRoot != "" {
+		// Default StripPathPrefix to the local root so a realistic
+		// GitHub URL whose path includes the same prefix
+		// (e.g. .../blob/main/testdata/catalog/all-locations.yaml)
+		// resolves to .../all-locations.yaml under the root instead of
+		// doubling up.
+		reader := catalog.LocalReader{
+			Root:            localRoot,
+			StripPathPrefix: strings.TrimSuffix(filepath.ToSlash(localRoot), "/") + "/",
+		}
+		return &grpcserver.Server{
+			Resolver: catalog.NewResolver(reader),
+			Reader:   reader,
+		}, envInt("GRPC_PORT", 50051), envInt("HTTP_PORT", 8080), false, nil
+	}
+
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, 0, 0, false, fmt.Errorf("config: %w", err)
+	}
+	client, tokenSource, err := ghforge.NewClient(cfg.GitHub)
+	if err != nil {
+		return nil, 0, 0, false, fmt.Errorf("github client: %w", err)
+	}
+	reader := ghforge.NewReader(client)
+	return &grpcserver.Server{
+		Resolver: catalog.NewResolver(reader),
+		Reader:   reader,
+		PR:       ghforge.NewPRService(client, tokenSource, cfg.Git),
+	}, cfg.GRPCPort, cfg.HTTPPort, cfg.GitHub.UsesApp(), nil
+}
+
+func envInt(key string, def int) int {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil {
+		return def
+	}
+	return n
 }

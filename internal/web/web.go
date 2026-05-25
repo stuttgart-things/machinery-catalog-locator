@@ -47,6 +47,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /tree", s.handleTree)
 	mux.HandleFunc("POST /remove-target", s.handleRemoveTarget)
 	mux.HandleFunc("POST /delete-resource", s.handleDeleteResource)
+	mux.HandleFunc("GET /entity-manifest", s.handleEntityManifest)
 	mux.HandleFunc("GET /healthz", s.handleHealth)
 	return mux
 }
@@ -58,8 +59,26 @@ type indexData struct {
 
 type treeData struct {
 	RootURL   string
-	Roots     []*catalogservice.Node
+	Roots     []*nodeView
 	Resources []*catalogservice.Resource
+}
+
+// nodeView wraps a proto Node so the recursive template has access to
+// the root URL (needed to build hx-get URLs for /entity-manifest and
+// /delete-resource). Without this, `$.RootURL` inside the recursive
+// template would rebind to the Node itself and fail at render time.
+type nodeView struct {
+	*catalogservice.Node
+	Children []*nodeView // shadows the embedded Node's Children
+	RootURL  string
+}
+
+func wrapNode(n *catalogservice.Node, root string) *nodeView {
+	nv := &nodeView{Node: n, RootURL: root}
+	for _, c := range n.GetChildren() {
+		nv.Children = append(nv.Children, wrapNode(c, root))
+	}
+	return nv
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -107,10 +126,15 @@ func (s *Server) handleTree(w http.ResponseWriter, r *http.Request) {
 		return a.Name < b.Name
 	})
 
+	wrappedRoots := make([]*nodeView, 0, len(tree.Roots))
+	for _, n := range tree.Roots {
+		wrappedRoots = append(wrappedRoots, wrapNode(n, root))
+	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := s.templates.ExecuteTemplate(w, "tree.html", treeData{
 		RootURL:   root,
-		Roots:     tree.Roots,
+		Roots:     wrappedRoots,
 		Resources: resList.Resources,
 	}); err != nil {
 		slog.Error("render tree", "err", err)
@@ -171,6 +195,35 @@ func (s *Server) handleDeleteResource(w http.ResponseWriter, r *http.Request) {
 		Title:       fmt.Sprintf("Resource %s/%s deletion PR opened", r.FormValue("kind"), r.FormValue("name")),
 		PullRequest: resp.GetPullRequestUrl(),
 	})
+}
+
+// handleEntityManifest fetches the Crossplane manifests linked from a
+// catalog entity and renders them as expandable <details> blocks. The
+// HTMX button in the tree swaps the response into a sibling pane.
+func (s *Server) handleEntityManifest(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	resp, err := s.GRPC.GetEntityManifest(r.Context(), &catalogservice.GetEntityManifestRequest{
+		RootUrl:   q.Get("root"),
+		Kind:      q.Get("kind"),
+		Name:      q.Get("name"),
+		Namespace: q.Get("namespace"),
+	})
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err != nil {
+		fmt.Fprintf(w, `<div class="alert alert-error">%s</div>`,
+			template.HTMLEscapeString(err.Error()))
+		return
+	}
+	var b strings.Builder
+	for _, m := range resp.GetManifests() {
+		fmt.Fprintf(&b,
+			`<details open class="manifest"><summary><span class="badge badge-kind">%s</span> <span class="badge badge-source">%s</span></summary><pre>%s</pre></details>`,
+			template.HTMLEscapeString(m.GetLinkKind()),
+			template.HTMLEscapeString(m.GetSource().GetPath()),
+			template.HTMLEscapeString(string(m.GetBody())),
+		)
+	}
+	fmt.Fprint(w, b.String())
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {

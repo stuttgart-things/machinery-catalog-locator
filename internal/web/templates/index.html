@@ -103,6 +103,20 @@
         details > summary { cursor: pointer; color: var(--text-muted); font-size: 0.8rem; }
         details[open] > summary { color: var(--text); }
 
+        .manifest-pane { margin: 0.35rem 0 0.5rem 1.5rem; }
+        .manifest-pane:empty { display: none; }
+        details.manifest {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 6px; padding: 0.5rem 0.75rem; margin: 0.35rem 0;
+        }
+        details.manifest > summary { display: flex; gap: 0.5rem; align-items: center; }
+        details.manifest pre {
+            margin-top: 0.5rem; padding: 0.75rem; background: #0a0c12;
+            border: 1px solid var(--border); border-radius: 4px;
+            color: var(--text); font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+            font-size: 0.8rem; line-height: 1.45; overflow-x: auto;
+        }
+
         footer {
             margin-top: 2rem; padding: 1rem 0;
             border-top: 1px solid var(--border);
