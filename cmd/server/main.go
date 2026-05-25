@@ -20,6 +20,7 @@ import (
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/keepalive"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/stuttgart-things/machinery-catalog-locator/catalogservice"
 	"github.com/stuttgart-things/machinery-catalog-locator/internal/catalog"
@@ -84,6 +85,11 @@ func main() {
 	healthSrv := health.NewServer()
 	healthpb.RegisterHealthServer(gs, healthSrv)
 	healthSrv.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+
+	// Reflection lets grpcurl / Postman discover the service without
+	// the .proto file on hand. Cheap to enable; standard for internal
+	// services behind the umbrella tool.
+	reflection.Register(gs)
 
 	webSrv, err := web.New(catalogSrv, web.BuildInfo{Version: version, Commit: commit, Date: date})
 	if err != nil {

@@ -7,24 +7,24 @@ import (
 	"path/filepath"
 )
 
-// FileReader abstrahiert den lesenden Zugriff auf Repository-Dateien.
-// Implementierungen: GitHub, GitLab, lokales Dateisystem (siehe LocalReader).
+// FileReader abstracts read access to repository files.
+// Implementations: GitHub, GitLab, local filesystem (see LocalReader).
 type FileReader interface {
 	Read(ctx context.Context, ref SourceRef) ([]byte, error)
 }
 
-// LocalReader liest aus dem lokalen Dateisystem. Owner/Repo werden ignoriert;
-// Ref wird ebenfalls ignoriert. Nuetzlich fuer Tests und Offline-Validierung.
+// LocalReader reads from the local filesystem. Owner/Repo and Ref are
+// ignored. Handy for tests and offline validation.
 type LocalReader struct {
-	Root string // Basisverzeichnis
+	Root string // base directory
 }
 
-// Read implementiert FileReader gegen das Dateisystem.
+// Read implements FileReader against the filesystem.
 func (l LocalReader) Read(_ context.Context, ref SourceRef) ([]byte, error) {
 	p := filepath.Join(l.Root, filepath.FromSlash(ref.Path))
 	data, err := os.ReadFile(p)
 	if err != nil {
-		return nil, fmt.Errorf("lokale Datei %s: %w", ref.Path, err)
+		return nil, fmt.Errorf("local file %s: %w", ref.Path, err)
 	}
 	return data, nil
 }

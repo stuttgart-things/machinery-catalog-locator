@@ -125,11 +125,14 @@ tree, _ := client.ResolveTree(ctx, &catalogservice.ResolveTreeRequest{
 })
 ```
 
-For ad-hoc probing use [`grpcurl`](https://github.com/fullstorydev/grpcurl)
-(requires reflection or the proto on hand):
+For ad-hoc probing use [`grpcurl`](https://github.com/fullstorydev/grpcurl).
+Reflection is enabled, so no proto file is needed:
 
 ```bash
-grpcurl -plaintext -proto catalogservice/catalog_service.proto \
+grpcurl -plaintext localhost:50051 list
+grpcurl -plaintext localhost:50051 list catalogservice.CatalogService
+
+grpcurl -plaintext \
   -d '{"root_url":"https://github.com/stuttgart-things/catalog/blob/main/all-locations.yaml"}' \
   localhost:50051 catalogservice.CatalogService/ResolveTree
 ```

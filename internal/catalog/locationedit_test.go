@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// mapReader ist ein In-Memory-FileReader fuer Tests (Pfad -> Inhalt).
+// mapReader is an in-memory FileReader for tests (path -> content).
 type mapReader map[string][]byte
 
 func (m mapReader) Read(_ context.Context, ref SourceRef) ([]byte, error) {
@@ -19,7 +19,7 @@ func (m mapReader) Read(_ context.Context, ref SourceRef) ([]byte, error) {
 
 type errNotFound struct{ path string }
 
-func (e errNotFound) Error() string { return "nicht gefunden: " + e.path }
+func (e errNotFound) Error() string { return "not found: " + e.path }
 
 func TestResolveTree(t *testing.T) {
 	files := mapReader{
@@ -49,13 +49,13 @@ spec:
 	}
 	res := Resources(roots)
 	if len(res) != 1 {
-		t.Fatalf("erwartet 1 Ressource, bekommen %d", len(res))
+		t.Fatalf("expected 1 resource, got %d", len(res))
 	}
 	if res[0].Entity.Metadata.Name != "claim-router" {
-		t.Errorf("falsche Ressource: %s", res[0].Entity.Metadata.Name)
+		t.Errorf("wrong resource: %s", res[0].Entity.Metadata.Name)
 	}
 	if res[0].ViaTarget != "./components/claim-router/catalog-info.yaml" {
-		t.Errorf("ViaTarget nicht gesetzt: %q", res[0].ViaTarget)
+		t.Errorf("ViaTarget not set: %q", res[0].ViaTarget)
 	}
 }
 
@@ -76,16 +76,16 @@ spec:
 	}
 	s := string(out)
 	if strings.Contains(s, "./a.yaml") {
-		t.Errorf("a.yaml haette entfernt werden muessen:\n%s", s)
+		t.Errorf("a.yaml should have been removed:\n%s", s)
 	}
 	if !strings.Contains(s, "./b.yaml") {
-		t.Errorf("b.yaml haette bleiben muessen:\n%s", s)
+		t.Errorf("b.yaml should have been kept:\n%s", s)
 	}
 }
 
 func TestRemoveTargetNotFound(t *testing.T) {
 	in := []byte("kind: Location\nspec:\n  targets:\n    - ./a.yaml\n")
 	if _, err := RemoveTargetFromLocation(in, "./x.yaml"); err == nil {
-		t.Fatal("Fehler erwartet bei unbekanntem Target")
+		t.Fatal("expected error for unknown target")
 	}
 }

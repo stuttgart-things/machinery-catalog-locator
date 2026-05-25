@@ -10,19 +10,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Resolver loest eine Backstage-Location rekursiv in einen Entitaetsbaum auf.
+// Resolver recursively resolves a Backstage Location into an entity tree.
 type Resolver struct {
 	Reader FileReader
 }
 
-// NewResolver erstellt einen Resolver mit dem angegebenen FileReader.
 func NewResolver(r FileReader) *Resolver {
 	return &Resolver{Reader: r}
 }
 
-// Resolve liest die Root-Location und folgt allen Targets rekursiv.
-// Das Ergebnis ist eine Liste von Wurzelknoten (eine Datei kann mehrere
-// YAML-Dokumente enthalten).
+// Resolve reads the root location and follows every target recursively.
+// The result is a slice of root nodes — a file can hold several YAML
+// documents.
 func (r *Resolver) Resolve(ctx context.Context, root SourceRef) ([]*Node, error) {
 	return r.resolveFile(ctx, root, nil, "", map[string]bool{})
 }
@@ -35,16 +34,16 @@ func (r *Resolver) resolveFile(
 	seen map[string]bool,
 ) ([]*Node, error) {
 	if seen[ref.String()] {
-		return nil, nil // Zyklus - Datei wurde bereits verarbeitet
+		return nil, nil // cycle — file already processed
 	}
 	seen[ref.String()] = true
 
 	data, err := r.Reader.Read(ctx, ref)
 	if err != nil {
-		return nil, fmt.Errorf("lesen von %s: %w", ref, err)
+		return nil, fmt.Errorf("read %s: %w", ref, err)
 	}
 
-	// Datei kann mehrere ---getrennte Dokumente enthalten.
+	// A file can contain multiple ---separated documents.
 	var entities []Entity
 	dec := yaml.NewDecoder(bytes.NewReader(data))
 	for {
@@ -53,10 +52,10 @@ func (r *Resolver) resolveFile(
 			if errors.Is(decErr, io.EOF) {
 				break
 			}
-			return nil, fmt.Errorf("yaml-decode %s: %w", ref, decErr)
+			return nil, fmt.Errorf("yaml decode %s: %w", ref, decErr)
 		}
 		if e.Kind == "" {
-			continue // leeres Dokument ueberspringen
+			continue // skip empty document
 		}
 		entities = append(entities, e)
 	}
@@ -79,7 +78,7 @@ func (r *Resolver) resolveFile(
 	return nodes, nil
 }
 
-// expandLocation folgt allen Targets einer Location-Entitaet.
+// expandLocation follows every target of a Location entity.
 func (r *Resolver) expandLocation(ctx context.Context, n *Node, seen map[string]bool) {
 	for _, t := range n.Entity.Spec.AllTargets() {
 		childRef, err := resolveTarget(n.Source, t)

@@ -17,7 +17,7 @@ import (
 	appcfg "github.com/stuttgart-things/machinery-catalog-locator/internal/config"
 )
 
-// PRRequest beschreibt eine Aenderung, die als Pull Request landen soll.
+// PRRequest describes a change that should land as a Pull Request.
 type PRRequest struct {
 	Owner         string
 	Repo          string
@@ -26,36 +26,34 @@ type PRRequest struct {
 	Title         string
 	Body          string
 	CommitMessage string
-	Edits         map[string][]byte // Pfad -> neuer Inhalt
-	Deletes       []string          // zu loeschende Pfade
+	Edits         map[string][]byte // path -> new content
+	Deletes       []string          // paths to remove
 }
 
-// PRService erzeugt Pull Requests: Clone + Commit + Push via go-git,
-// PR-Erstellung via go-github.
+// PRService opens Pull Requests: clone + commit + push via go-git, PR
+// creation via go-github.
 type PRService struct {
 	client *gh.Client
 	token  TokenSource
 	author appcfg.GitIdentity
 }
 
-// NewPRService erstellt den PR-Service.
 func NewPRService(client *gh.Client, token TokenSource, author appcfg.GitIdentity) *PRService {
 	return &PRService{client: client, token: token, author: author}
 }
 
-// OpenPullRequest fuehrt die komplette PR-Erstellung aus und liefert die PR-URL.
+// OpenPullRequest performs the full PR cycle and returns the PR URL.
 func (s *PRService) OpenPullRequest(ctx context.Context, req PRRequest) (string, error) {
 	if len(req.Edits) == 0 && len(req.Deletes) == 0 {
-		return "", fmt.Errorf("PRRequest enthaelt keine Aenderungen")
+		return "", fmt.Errorf("PRRequest contains no changes")
 	}
 
 	token, err := s.token(ctx)
 	if err != nil {
-		return "", fmt.Errorf("auth-token: %w", err)
+		return "", fmt.Errorf("auth token: %w", err)
 	}
 	auth := &githttp.BasicAuth{Username: "x-access-token", Password: token}
 
-	// 1. In-Memory Shallow-Clone des Base-Branch.
 	repo, err := git.CloneContext(ctx, memory.NewStorage(), memfs.New(), &git.CloneOptions{
 		URL:           fmt.Sprintf("https://github.com/%s/%s.git", req.Owner, req.Repo),
 		Auth:          auth,
@@ -72,24 +70,22 @@ func (s *PRService) OpenPullRequest(ctx context.Context, req PRRequest) (string,
 		return "", fmt.Errorf("worktree: %w", err)
 	}
 
-	// 2. Neuen Head-Branch anlegen.
 	if err := wt.Checkout(&git.CheckoutOptions{
 		Branch: plumbing.NewBranchReferenceName(req.HeadBranch),
 		Create: true,
 	}); err != nil {
-		return "", fmt.Errorf("branch %s anlegen: %w", req.HeadBranch, err)
+		return "", fmt.Errorf("create branch %s: %w", req.HeadBranch, err)
 	}
 
-	// 3. Edits und Deletes anwenden.
 	fs := wt.Filesystem
 	for path, content := range req.Edits {
 		f, err := fs.Create(path)
 		if err != nil {
-			return "", fmt.Errorf("datei %s schreiben: %w", path, err)
+			return "", fmt.Errorf("write %s: %w", path, err)
 		}
 		if _, err := f.Write(content); err != nil {
 			_ = f.Close()
-			return "", fmt.Errorf("datei %s schreiben: %w", path, err)
+			return "", fmt.Errorf("write %s: %w", path, err)
 		}
 		_ = f.Close()
 		if _, err := wt.Add(path); err != nil {
@@ -102,7 +98,6 @@ func (s *PRService) OpenPullRequest(ctx context.Context, req PRRequest) (string,
 		}
 	}
 
-	// 4. Commit.
 	if _, err := wt.Commit(req.CommitMessage, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  s.author.Name,
@@ -113,7 +108,6 @@ func (s *PRService) OpenPullRequest(ctx context.Context, req PRRequest) (string,
 		return "", fmt.Errorf("commit: %w", err)
 	}
 
-	// 5. Push.
 	if err := repo.PushContext(ctx, &git.PushOptions{
 		Auth: auth,
 		RefSpecs: []config.RefSpec{config.RefSpec(fmt.Sprintf(
@@ -122,7 +116,6 @@ func (s *PRService) OpenPullRequest(ctx context.Context, req PRRequest) (string,
 		return "", fmt.Errorf("push: %w", err)
 	}
 
-	// 6. Pull Request oeffnen.
 	pr, _, err := s.client.PullRequests.Create(ctx, req.Owner, req.Repo, &gh.NewPullRequest{
 		Title: gh.String(req.Title),
 		Head:  gh.String(req.HeadBranch),
@@ -130,7 +123,7 @@ func (s *PRService) OpenPullRequest(ctx context.Context, req PRRequest) (string,
 		Body:  gh.String(req.Body),
 	})
 	if err != nil {
-		return "", fmt.Errorf("PR erstellen: %w", err)
+		return "", fmt.Errorf("create PR: %w", err)
 	}
 	return pr.GetHTMLURL(), nil
 }
