@@ -1,0 +1,45 @@
+version: "3"
+
+dotenv: [".env"]
+
+vars:
+  BIN: bin/machinery-catalog-locator
+
+tasks:
+  tidy:
+    desc: Resolve dependencies
+    cmds:
+      - go mod tidy
+
+  fmt:
+    desc: Format Go sources
+    cmds:
+      - gofmt -w .
+
+  vet:
+    desc: Static analysis
+    cmds:
+      - go vet ./...
+
+  test:
+    desc: Run unit tests
+    cmds:
+      - go test ./...
+
+  build:
+    desc: Build server binary
+    cmds:
+      - go build -o {{.BIN}} ./cmd/server
+
+  run:
+    desc: Run the HTTP server
+    cmds:
+      - go run ./cmd/server
+
+  ci:
+    desc: tidy + fmt + vet + test
+    cmds:
+      - task: tidy
+      - task: fmt
+      - task: vet
+      - task: test

@@ -1,0 +1,17 @@
+# Binaries
+bin/
+*.exe
+*.test
+*.out
+
+# Local environment / secrets
+.env
+*.pem
+
+# Editor & OS noise
+.idea/
+.vscode/
+.DS_Store
+
+# Go build cache
+/vendor/
