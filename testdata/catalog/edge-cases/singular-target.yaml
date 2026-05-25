@@ -1,0 +1,8 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: singular-form
+  description: Uses spec.target (singular) instead of spec.targets.
+spec:
+  type: url
+  target: ./only-component.yaml

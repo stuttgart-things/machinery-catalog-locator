@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: only-component
+  description: Reached through a Location that uses spec.target (singular).
+spec:
+  type: service
+  lifecycle: experimental
+  owner: edge-cases-team

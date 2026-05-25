@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: platform-services
+  description: Nested location pointing to platform-team services.
+spec:
+  type: url
+  targets:
+    - ./services/api-gateway.yaml

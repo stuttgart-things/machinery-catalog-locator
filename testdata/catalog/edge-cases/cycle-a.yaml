@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: cycle-a
+  description: Half of a Location cycle. The resolver must terminate, not loop.
+spec:
+  type: url
+  targets:
+    - ./cycle-b.yaml

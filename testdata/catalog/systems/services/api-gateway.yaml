@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: api-gateway
+  description: Edge proxy for all platform-team services.
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team

@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: broken-targets
+  description: One target resolves, one does not. Resolver should keep going and record the bad one in Node.Broken.
+spec:
+  type: url
+  targets:
+    - ./only-component.yaml
+    - ./does-not-exist.yaml

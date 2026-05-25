@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: cycle-b
+  description: Points back at cycle-a to form a closed loop.
+spec:
+  type: url
+  targets:
+    - ./cycle-a.yaml

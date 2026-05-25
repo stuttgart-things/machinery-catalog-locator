@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: claim-router
+  namespace: insurance
+  description: Routes inbound claims to the appropriate downstream service.
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: claims-platform

@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: all-locations
+  description: Root location fanning out to every example component and system.
+spec:
+  type: url
+  targets:
+    - ./components/claim-router/catalog-info.yaml
+    - ./components/payment-api/catalog-info.yaml
+    - ./systems/platform-location.yaml

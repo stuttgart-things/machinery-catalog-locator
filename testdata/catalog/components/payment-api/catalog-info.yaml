@@ -1,0 +1,20 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: payment-api
+  description: Public REST API for payment intents and refunds.
+spec:
+  type: service
+  lifecycle: production
+  owner: payments-team
+  providesApis:
+    - payment-api-spec
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: payment-api-db
+  description: PostgreSQL instance backing the payment-api component.
+spec:
+  type: database
+  owner: payments-team
