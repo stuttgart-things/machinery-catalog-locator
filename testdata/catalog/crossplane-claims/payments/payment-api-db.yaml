@@ -1,0 +1,14 @@
+apiVersion: db.stuttgart-things.com/v1alpha1
+kind: PostgresClaim
+metadata:
+  name: payment-api-db
+  namespace: payments
+  labels:
+    machinery.stuttgart-things.com/catalog-resource: payment-api-db
+spec:
+  parameters:
+    version: "16"
+    storageGB: 100
+    highAvailability: true
+  compositionRef:
+    name: postgres-eu-central

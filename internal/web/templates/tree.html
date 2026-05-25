@@ -29,12 +29,16 @@
                 </form>
                 {{end}}
             {{else}}
+                <button class="btn btn-sm"
+                        hx-get="/entity-manifest?root={{.RootURL}}&kind={{.Entity.Kind}}&name={{.Entity.Metadata.Name}}&namespace={{.Entity.Metadata.Namespace}}"
+                        hx-target="next .manifest-pane"
+                        hx-swap="innerHTML">View claim</button>
                 <form hx-post="/delete-resource"
                       hx-target="#action-pane"
                       hx-swap="innerHTML"
                       hx-confirm="Delete {{.Entity.Kind}}/{{.Entity.Metadata.Name}} from Git? This opens a PR removing the file and the parent target."
                       style="display:inline">
-                    <input type="hidden" name="root" value="{{$.RootURL}}">
+                    <input type="hidden" name="root" value="{{.RootURL}}">
                     <input type="hidden" name="kind" value="{{.Entity.Kind}}">
                     <input type="hidden" name="name" value="{{.Entity.Metadata.Name}}">
                     <input type="hidden" name="namespace" value="{{.Entity.Metadata.Namespace}}">
@@ -43,6 +47,7 @@
             {{end}}
         </div>
     </div>
+    {{if ne .Entity.Kind "Location"}}<div class="manifest-pane"></div>{{end}}
     {{if .Broken}}
     <ul>
         {{range .Broken}}
@@ -87,6 +92,10 @@
                 {{if .Namespace}}<span class="badge badge-namespace">{{.Namespace}}</span>{{end}}
                 <span class="badge badge-source">{{.Source.Owner}}/{{.Source.Repo}}:{{.Source.Path}}</span>
                 <div class="actions">
+                    <button class="btn btn-sm"
+                            hx-get="/entity-manifest?root={{$.RootURL}}&kind={{.Kind}}&name={{.Name}}&namespace={{.Namespace}}"
+                            hx-target="next .manifest-pane"
+                            hx-swap="innerHTML">View claim</button>
                     <form hx-post="/delete-resource"
                           hx-target="#action-pane"
                           hx-swap="innerHTML"
@@ -100,6 +109,7 @@
                     </form>
                 </div>
             </div>
+            <div class="manifest-pane"></div>
         </li>
         {{end}}
     </ul>

@@ -122,6 +122,46 @@ message WatchTreeRequest {
     int32 interval_seconds = 2;
 }
 
+// CrossplaneManifest is one Crossplane Claim or XR linked from a
+// catalog entity via the machinery.stuttgart-things.com/crossplane-*
+// annotations.
+message CrossplaneManifest {
+    // Link kind, not the manifest's k8s kind. Either "claim" or "xr".
+    string link_kind = 1;
+    // Annotation key that produced this ref, e.g.
+    // "machinery.stuttgart-things.com/crossplane-claim".
+    string annotation = 2;
+    // Raw annotation value (the blob URL).
+    string url = 3;
+    // SourceRef parsed from `url` (owner/repo/ref/path).
+    SourceRef source = 4;
+    // The manifest YAML bytes fetched from `source`.
+    bytes body = 5;
+}
+
+message GetEntityManifestRequest {
+    string root_url = 1;
+    string kind = 2;
+    string name = 3;
+    string namespace = 4;
+}
+
+message GetEntityManifestResponse {
+    repeated CrossplaneManifest manifests = 1;
+}
+
+message ListEntitiesByCrossplaneSourceRequest {
+    string root_url = 1;
+    // manifest_url is the GitHub blob URL of a Crossplane Claim/XR.
+    // Matching is on the URL's path component only — owner/repo/ref
+    // are ignored, mirroring LocalReader semantics.
+    string manifest_url = 2;
+}
+
+message ListEntitiesByCrossplaneSourceResponse {
+    repeated Resource entities = 1;
+}
+
 service CatalogService {
     // ResolveTree returns the full catalog graph rooted at the given URL.
     rpc ResolveTree(ResolveTreeRequest) returns (ResolveTreeResponse);
@@ -135,4 +175,12 @@ service CatalogService {
     // WatchTree replays the current tree as ADDED events, then streams
     // diffs against successive poll snapshots until the client leaves.
     rpc WatchTree(WatchTreeRequest) returns (stream TreeEvent);
+    // GetEntityManifest returns the Crossplane Claim/XR manifests
+    // linked from a catalog entity via the
+    // machinery.stuttgart-things.com/crossplane-* annotations.
+    rpc GetEntityManifest(GetEntityManifestRequest) returns (GetEntityManifestResponse);
+    // ListEntitiesByCrossplaneSource is the reverse of
+    // GetEntityManifest: given a Crossplane manifest URL, return the
+    // catalog entities whose annotations reference it.
+    rpc ListEntitiesByCrossplaneSource(ListEntitiesByCrossplaneSourceRequest) returns (ListEntitiesByCrossplaneSourceResponse);
 }

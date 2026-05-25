@@ -3,6 +3,10 @@ kind: Component
 metadata:
   name: payment-api
   description: Public REST API for payment intents and refunds.
+  annotations:
+    machinery.stuttgart-things.com/crossplane-kind: XPaymentApi
+    machinery.stuttgart-things.com/crossplane-api-version: payments.stuttgart-things.com/v1alpha1
+    machinery.stuttgart-things.com/crossplane-xr: https://github.com/stuttgart-things/catalog/blob/main/crossplane-claims/payments/payment-api-xr.yaml
 spec:
   type: service
   lifecycle: production
@@ -15,6 +19,10 @@ kind: Resource
 metadata:
   name: payment-api-db
   description: PostgreSQL instance backing the payment-api component.
+  annotations:
+    machinery.stuttgart-things.com/crossplane-kind: PostgresClaim
+    machinery.stuttgart-things.com/crossplane-api-version: db.stuttgart-things.com/v1alpha1
+    machinery.stuttgart-things.com/crossplane-claim: https://github.com/stuttgart-things/catalog/blob/main/crossplane-claims/payments/payment-api-db.yaml
 spec:
   type: database
   owner: payments-team

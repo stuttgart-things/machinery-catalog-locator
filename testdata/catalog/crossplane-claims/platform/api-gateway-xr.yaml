@@ -1,0 +1,16 @@
+apiVersion: platform.stuttgart-things.com/v1alpha1
+kind: XApiGateway
+metadata:
+  name: api-gateway
+  labels:
+    machinery.stuttgart-things.com/catalog-component: api-gateway
+spec:
+  parameters:
+    listeners:
+      - port: 443
+        protocol: HTTPS
+    autoscaling:
+      minReplicas: 2
+      maxReplicas: 10
+  compositionRef:
+    name: api-gateway-default

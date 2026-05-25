@@ -5,6 +5,8 @@ dotenv: [".env"]
 vars:
   BIN: bin/machinery-catalog-locator
   PROTO_DIR: catalogservice
+  LOCAL_FIXTURES: testdata/catalog
+  LOCAL_ENTRY: all-locations.yaml
 
 tasks:
   tidy:
@@ -41,6 +43,68 @@ tasks:
     desc: Run the gRPC + HTMX server
     cmds:
       - go run ./cmd/server
+
+  run-local:
+    desc: Run the gRPC + HTMX server against testdata/catalog (no GitHub required)
+    summary: |
+      Read-only mode: ResolveTree, ListResources, GetEntityManifest,
+      ListEntitiesByCrossplaneSource all work. RemoveTarget and
+      DeleteResource return Unimplemented since no PR service is wired.
+
+      Hit it with grpcurl:
+        grpcurl -plaintext localhost:50051 list
+    cmds:
+      - go run ./cmd/server -local-root {{.LOCAL_FIXTURES}}
+
+  local:
+    desc: Resolve the local testdata catalog (no GitHub required); gum-driven picker
+    summary: |
+      Drives catalog.LocalReader against {{.LOCAL_FIXTURES}} and prints the
+      resolved entity tree.
+
+      Without FILE=..., a gum picker lists every *.yaml under
+      {{.LOCAL_FIXTURES}}. Pass FILE=... to skip the picker:
+
+        task local
+        task local FILE=edge-cases/singular-target.yaml
+    preconditions:
+      - sh: command -v gum >/dev/null
+        msg: |
+          gum is required for the interactive picker. Install it:
+            https://github.com/charmbracelet/gum
+          Or skip the picker by passing FILE=...:
+            task local FILE=all-locations.yaml
+    vars:
+      ENTRY:
+        sh: |
+          FILE='{{.FILE | default ""}}'
+          if [ -n "$FILE" ]; then
+            printf '%s' "$FILE"
+          else
+            (cd {{.LOCAL_FIXTURES}} && find . -name '*.yaml' -type f | sed 's|^\./||' | sort) \
+              | gum choose --header "Pick a catalog entry to resolve:" --height 12
+          fi
+    cmds:
+      - go run ./cmd/local-resolve -root {{.LOCAL_FIXTURES}} -file {{.ENTRY}}
+
+  claim:
+    desc: Print the Crossplane manifest linked from a single catalog entity
+    summary: |
+      Resolves the catalog from {{.LOCAL_ENTRY}}, finds the entity named
+      NAME (supports NAME=foo@namespace), and dumps just the linked
+      Crossplane manifest YAML to stdout.
+
+        task claim NAME=claim-router
+        task claim NAME=claim-router@insurance
+        task claim NAME=payment-api-db > /tmp/claim.yaml
+    preconditions:
+      - sh: test -n "{{.NAME}}"
+        msg: |
+          NAME is required. Examples:
+            task claim NAME=claim-router
+            task claim NAME=payment-api-db
+    cmds:
+      - go run ./cmd/local-resolve -root {{.LOCAL_FIXTURES}} -file {{.LOCAL_ENTRY}} -name {{.NAME}} -claim-only
 
   ci:
     desc: tidy + fmt + vet + test

@@ -19,11 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	CatalogService_ResolveTree_FullMethodName    = "/catalogservice.CatalogService/ResolveTree"
-	CatalogService_ListResources_FullMethodName  = "/catalogservice.CatalogService/ListResources"
-	CatalogService_RemoveTarget_FullMethodName   = "/catalogservice.CatalogService/RemoveTarget"
-	CatalogService_DeleteResource_FullMethodName = "/catalogservice.CatalogService/DeleteResource"
-	CatalogService_WatchTree_FullMethodName      = "/catalogservice.CatalogService/WatchTree"
+	CatalogService_ResolveTree_FullMethodName                    = "/catalogservice.CatalogService/ResolveTree"
+	CatalogService_ListResources_FullMethodName                  = "/catalogservice.CatalogService/ListResources"
+	CatalogService_RemoveTarget_FullMethodName                   = "/catalogservice.CatalogService/RemoveTarget"
+	CatalogService_DeleteResource_FullMethodName                 = "/catalogservice.CatalogService/DeleteResource"
+	CatalogService_WatchTree_FullMethodName                      = "/catalogservice.CatalogService/WatchTree"
+	CatalogService_GetEntityManifest_FullMethodName              = "/catalogservice.CatalogService/GetEntityManifest"
+	CatalogService_ListEntitiesByCrossplaneSource_FullMethodName = "/catalogservice.CatalogService/ListEntitiesByCrossplaneSource"
 )
 
 // CatalogServiceClient is the client API for CatalogService service.
@@ -42,6 +44,14 @@ type CatalogServiceClient interface {
 	// WatchTree replays the current tree as ADDED events, then streams
 	// diffs against successive poll snapshots until the client leaves.
 	WatchTree(ctx context.Context, in *WatchTreeRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[TreeEvent], error)
+	// GetEntityManifest returns the Crossplane Claim/XR manifests
+	// linked from a catalog entity via the
+	// machinery.stuttgart-things.com/crossplane-* annotations.
+	GetEntityManifest(ctx context.Context, in *GetEntityManifestRequest, opts ...grpc.CallOption) (*GetEntityManifestResponse, error)
+	// ListEntitiesByCrossplaneSource is the reverse of
+	// GetEntityManifest: given a Crossplane manifest URL, return the
+	// catalog entities whose annotations reference it.
+	ListEntitiesByCrossplaneSource(ctx context.Context, in *ListEntitiesByCrossplaneSourceRequest, opts ...grpc.CallOption) (*ListEntitiesByCrossplaneSourceResponse, error)
 }
 
 type catalogServiceClient struct {
@@ -111,6 +121,26 @@ func (c *catalogServiceClient) WatchTree(ctx context.Context, in *WatchTreeReque
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type CatalogService_WatchTreeClient = grpc.ServerStreamingClient[TreeEvent]
 
+func (c *catalogServiceClient) GetEntityManifest(ctx context.Context, in *GetEntityManifestRequest, opts ...grpc.CallOption) (*GetEntityManifestResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetEntityManifestResponse)
+	err := c.cc.Invoke(ctx, CatalogService_GetEntityManifest_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) ListEntitiesByCrossplaneSource(ctx context.Context, in *ListEntitiesByCrossplaneSourceRequest, opts ...grpc.CallOption) (*ListEntitiesByCrossplaneSourceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListEntitiesByCrossplaneSourceResponse)
+	err := c.cc.Invoke(ctx, CatalogService_ListEntitiesByCrossplaneSource_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CatalogServiceServer is the server API for CatalogService service.
 // All implementations must embed UnimplementedCatalogServiceServer
 // for forward compatibility.
@@ -127,6 +157,14 @@ type CatalogServiceServer interface {
 	// WatchTree replays the current tree as ADDED events, then streams
 	// diffs against successive poll snapshots until the client leaves.
 	WatchTree(*WatchTreeRequest, grpc.ServerStreamingServer[TreeEvent]) error
+	// GetEntityManifest returns the Crossplane Claim/XR manifests
+	// linked from a catalog entity via the
+	// machinery.stuttgart-things.com/crossplane-* annotations.
+	GetEntityManifest(context.Context, *GetEntityManifestRequest) (*GetEntityManifestResponse, error)
+	// ListEntitiesByCrossplaneSource is the reverse of
+	// GetEntityManifest: given a Crossplane manifest URL, return the
+	// catalog entities whose annotations reference it.
+	ListEntitiesByCrossplaneSource(context.Context, *ListEntitiesByCrossplaneSourceRequest) (*ListEntitiesByCrossplaneSourceResponse, error)
 	mustEmbedUnimplementedCatalogServiceServer()
 }
 
@@ -151,6 +189,12 @@ func (UnimplementedCatalogServiceServer) DeleteResource(context.Context, *Delete
 }
 func (UnimplementedCatalogServiceServer) WatchTree(*WatchTreeRequest, grpc.ServerStreamingServer[TreeEvent]) error {
 	return status.Error(codes.Unimplemented, "method WatchTree not implemented")
+}
+func (UnimplementedCatalogServiceServer) GetEntityManifest(context.Context, *GetEntityManifestRequest) (*GetEntityManifestResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetEntityManifest not implemented")
+}
+func (UnimplementedCatalogServiceServer) ListEntitiesByCrossplaneSource(context.Context, *ListEntitiesByCrossplaneSourceRequest) (*ListEntitiesByCrossplaneSourceResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListEntitiesByCrossplaneSource not implemented")
 }
 func (UnimplementedCatalogServiceServer) mustEmbedUnimplementedCatalogServiceServer() {}
 func (UnimplementedCatalogServiceServer) testEmbeddedByValue()                        {}
@@ -256,6 +300,42 @@ func _CatalogService_WatchTree_Handler(srv interface{}, stream grpc.ServerStream
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type CatalogService_WatchTreeServer = grpc.ServerStreamingServer[TreeEvent]
 
+func _CatalogService_GetEntityManifest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetEntityManifestRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).GetEntityManifest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_GetEntityManifest_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).GetEntityManifest(ctx, req.(*GetEntityManifestRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_ListEntitiesByCrossplaneSource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListEntitiesByCrossplaneSourceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).ListEntitiesByCrossplaneSource(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_ListEntitiesByCrossplaneSource_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).ListEntitiesByCrossplaneSource(ctx, req.(*ListEntitiesByCrossplaneSourceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CatalogService_ServiceDesc is the grpc.ServiceDesc for CatalogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -278,6 +358,14 @@ var CatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteResource",
 			Handler:    _CatalogService_DeleteResource_Handler,
+		},
+		{
+			MethodName: "GetEntityManifest",
+			Handler:    _CatalogService_GetEntityManifest_Handler,
+		},
+		{
+			MethodName: "ListEntitiesByCrossplaneSource",
+			Handler:    _CatalogService_ListEntitiesByCrossplaneSource_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

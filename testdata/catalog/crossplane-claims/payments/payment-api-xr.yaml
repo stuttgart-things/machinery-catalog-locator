@@ -1,0 +1,12 @@
+apiVersion: payments.stuttgart-things.com/v1alpha1
+kind: XPaymentApi
+metadata:
+  name: payment-api
+  labels:
+    machinery.stuttgart-things.com/catalog-component: payment-api
+spec:
+  parameters:
+    replicas: 3
+    region: eu-central-1
+  compositionRef:
+    name: payment-api-default

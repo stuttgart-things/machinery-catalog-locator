@@ -4,6 +4,10 @@ metadata:
   name: claim-router
   namespace: insurance
   description: Routes inbound claims to the appropriate downstream service.
+  annotations:
+    machinery.stuttgart-things.com/crossplane-kind: ClaimRouter
+    machinery.stuttgart-things.com/crossplane-api-version: insurance.stuttgart-things.com/v1alpha1
+    machinery.stuttgart-things.com/crossplane-claim: https://github.com/stuttgart-things/catalog/blob/main/crossplane-claims/insurance/claim-router.yaml
 spec:
   type: service
   lifecycle: production
