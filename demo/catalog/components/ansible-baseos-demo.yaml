@@ -1,0 +1,24 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ansible-baseos-demo
+  namespace: infra
+  description: >-
+    BaseOS hardening run executed in the cluster as a Crossplane AnsibleRun.
+    This catalog entry is the Git-side declaration; the live resource is
+    crossplane-claims/ansible/ansible-run-demo.yaml, synced by Argo CD.
+  annotations:
+    # Forward link: where the source-of-truth Crossplane manifest lives in Git.
+    # AnsibleRun is the composite (XR), so we use the crossplane-xr annotation.
+    # The locator follows this to fetch the manifest with the same FileReader
+    # it uses for the catalog (GetEntityManifest / `View claim` in the UI).
+    machinery.stuttgart-things.com/crossplane-kind: AnsibleRun
+    machinery.stuttgart-things.com/crossplane-api-version: resources.stuttgart-things.com/v1alpha1
+    machinery.stuttgart-things.com/crossplane-xr: https://github.com/stuttgart-things/machinery-catalog-locator/blob/main/demo/crossplane-claims/ansible/ansible-run-demo.yaml
+    # Optional: which Argo CD Application reconciles this resource.
+    argocd.argoproj.io/app-name: ansible-run-demo
+spec:
+  type: service
+  lifecycle: experimental
+  owner: platform-team
+  system: machinery-demo

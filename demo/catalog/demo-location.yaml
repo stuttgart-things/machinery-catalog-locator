@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: machinery-demo
+  description: >-
+    End-to-end demo root. Fans out to the catalog Component that is linked
+    to a live Crossplane AnsibleRun in the cluster — point the locator here.
+spec:
+  type: url
+  targets:
+    - ./components/ansible-baseos-demo.yaml

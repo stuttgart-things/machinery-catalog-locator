@@ -1,0 +1,35 @@
+apiVersion: resources.stuttgart-things.com/v1alpha1
+kind: AnsibleRun
+metadata:
+  name: ansible-run-demo
+  namespace: default
+  labels:
+    # Reverse link: machinery / the locator reads this label to jump from
+    # the LIVE resource in the cluster back to its catalog Component
+    # (Component/ansible-baseos-demo). The catalog Component points the
+    # other way via its crossplane-xr annotation — the two close the loop.
+    machinery.stuttgart-things.com/catalog-component: ansible-baseos-demo
+spec:
+  ansibleCredentialsPasswordKey: ANSIBLE_PASSWORD
+  ansibleCredentialsSecretName: ansible-credentials
+  ansibleCredentialsUserKey: ANSIBLE_USER
+  ansibleExtraCollections:
+    - https://github.com/stuttgart-things/ansible/releases/download/sthings-baseos-25.4.118.tar.gz/sthings-baseos-25.4.118.tar.gz
+  ansiblePlaybooks:
+    - sthings.baseos.setup
+  ansibleTargetHost: all
+  ansibleVarsInventory:
+    - all+["10.31.104.101"]
+  createInventory: "true"
+  crossplaneNamespace: default
+  crossplaneObjectName: run-ansible-demo
+  crossplaneProviderConfig: in-cluster
+  crossplaneTimeout: "120"
+  deriveReadiness: true
+  environmentConfig: default
+  gitRepoUrl: https://github.com/stuttgart-things/stage-time.git
+  installExtraCollections: "true"
+  namespace: tekton-ci
+  pipelineRunName: run-ansible-demo
+  storageSize: 500Mi
+  wrapInCrossplane: true
