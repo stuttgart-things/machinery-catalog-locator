@@ -1,0 +1,21 @@
+kcl_options:
+  - key: config.image
+    value: ghcr.io/stuttgart-things/machinery-catalog-locator:latest
+  - key: config.namespace
+    value: machinery-catalog-locator
+  - key: config.grpcPort
+    value: 50051
+  - key: config.httpEnabled
+    value: True
+  - key: config.httpPort
+    value: 8080
+  - key: config.httpRouteEnabled
+    value: True
+  - key: config.httpRouteParentRefName
+    value: movie-scripts2-gateway
+  - key: config.httpRouteParentRefNamespace
+    value: default
+  - key: config.httpRouteHostname
+    value: machinery-catalog-locator.movie-scripts2.sthings-vsphere.labul.sva.de
+  - key: config.grpcRouteEnabled
+    value: True
