@@ -20,6 +20,10 @@ jobs:
     with:
       runs-on: ubuntu-latest
       registry: ghcr.io
+      # catalog-locator's package main lives under ./cmd/server (machinery's
+      # is at the repo root, the template's default). Without this, ko tries
+      # to build "." and fails: importpath is not `package main`.
+      build-path: ./cmd/server
       tags: pr-${{ github.event.number }}-${{ github.event.pull_request.head.sha }},pr-${{ github.event.number }}
     secrets: inherit # pragma: allowlist secret
 
@@ -28,4 +32,5 @@ jobs:
     uses: stuttgart-things/github-workflow-templates/.github/workflows/call-ko-build.yaml@main
     with:
       runs-on: ubuntu-latest
+      build-path: ./cmd/server
     secrets: inherit # pragma: allowlist secret
