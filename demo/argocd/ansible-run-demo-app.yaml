@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ansible-run-demo
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/stuttgart-things/machinery-catalog-locator.git
+    targetRevision: main
+    # Sync only the Crossplane manifest(s) — the catalog YAML under
+    # demo/catalog is consumed by Backstage / the locator, not applied
+    # to the cluster.
+    path: demo/crossplane-claims/ansible
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # AnsibleRun reconciliation is async (it spawns a Tekton PipelineRun);
+      # don't let Argo CD mark the app Degraded while the run is in flight.
+      - ApplyOutOfSyncOnly=true
