@@ -105,7 +105,9 @@ gRPC callers hit — there is no separate REST surface to maintain.
 
 Create a GitHub App (recommended) with repository permissions *Contents:
 Read & write* and *Pull requests: Read & write*. Download the private
-key as PEM. For local development a `GITHUB_TOKEN` is sufficient.
+key as PEM. For local development a `GITHUB_TOKEN` is sufficient. The
+full App walkthrough (org-owned, exact permissions, install, Vault/ESO
+wiring) is in [`GITHUB_APP.md`](GITHUB_APP.md).
 
 ```bash
 cp .env.example .env      # fill in the values
@@ -311,6 +313,50 @@ grpcurl -plaintext \
   }' \
   localhost:50051 catalogservice.CatalogService/ListEntitiesByCrossplaneSource
 ```
+
+## Deployment & PR previews
+
+The service ships as a container image **built with [ko](https://ko.build)**
+(no Dockerfile — see [`.ko.yaml`](.ko.yaml), built from `./cmd/server`) and a
+set of Kubernetes manifests defined in **[`kcl/`](kcl/)** (Deployment, Service,
+ConfigMap, optional Gateway API HTTP/GRPCRoute — no cluster-watch config or
+RBAC, since catalog-locator reads Git, not the cluster API). The KCL base is
+published as a kustomize OCI artifact, so a deployer overlays the per-env image
+tag + namespace without rebuilding it.
+
+Two ghcr packages are produced:
+
+| Package | Built by | Contents |
+|---------|----------|----------|
+| `ghcr.io/stuttgart-things/machinery-catalog-locator` | ko | runtime image |
+| `ghcr.io/stuttgart-things/machinery-catalog-locator-kustomize` | KCL → kustomize OCI | manifests base |
+
+### CI (`.github/workflows/`)
+
+Thin wrappers over [`stuttgart-things/github-workflow-templates`](https://github.com/stuttgart-things/github-workflow-templates):
+
+| Workflow | Trigger | Does |
+|----------|---------|------|
+| `build-scan-image` | push / PR | ko build + scan + push the image |
+| `push-kustomize-pr` | PR | publish the kustomize OCI tagged `pr-<n>-<sha>` |
+| `comment-preview-url` | PR labelled `preview` | post the preview URL on the PR |
+| `cleanup-pr-artifacts` | PR closed | delete the `pr-<n>-*` ghcr tags |
+
+### Per-PR preview environments
+
+Label a PR **`preview`** and a full per-PR environment is deployed on
+`homerun2-dev`, reachable at
+`https://machinery-catalog-locator-pr-<n>.homerun2-dev.sthings-vsphere.labul.sva.de`
+(gRPC at the `-grpc` host). Removing the label or closing the PR tears it down.
+
+The platform itself lives in
+[`stuttgart-things/argocd`](https://github.com/stuttgart-things/argocd) under
+`platforms/machinery-catalog-locator-pr-preview/` — an `ApplicationSet` that
+fans out over (clusters labelled `machinery-catalog-locator-pr-preview`) ×
+(PRs labelled `preview`), consuming the `pr-<n>-<sha>` image + kustomize tags
+above. The workload authenticates as the GitHub App; its private key is pulled
+from Vault into each preview namespace by the External Secrets Operator (see
+[`GITHUB_APP.md`](GITHUB_APP.md) for the App + Vault/ESO setup).
 
 ## Notes & limits
 
